@@ -1,43 +1,43 @@
 # NPM
-[node.js/npm]https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
-npm run lint to check for linter rules
-npm run dev to run locally
-npm run build to build production ready application
-npm run preview for prduction local production build to test locally before deployment
+[node.js/npm]https://docs.npmjs.com/downloading-and-installing-node-js-and-npm   
+npm run lint to check for linter rules   
+npm run dev to run locally   
+npm run build to build production ready application   
+npm run preview for prduction local production build to test locally before deployment   
 
 # GIT
-If you don't have a github account you will want to create one using the e-mail I invited you with.
+If you don't have a github account you will want to create one using the e-mail I invited you with.   
 https://git-scm.com/install/ - Choose your platform   
 
 ## Mac
 On macOS, you can use the Terminal to check and set your Git configuration. This includes your username, email, editor, and other preferences that control Git’s behavior.
 
--Open the Terminal application on your Mac.
--Type git config --list and press Enter to view all current Git configuration settings.
--To set your global username, run git config --global user.name "Your Name" replacing with your actual name.
--To set your global email, run git config --global user.email "your@email.com" replacing with your actual email.
--Optional - To change the default text editor, run git config --global core.editor emacs or replace emacs with your preferred editor.
--Optional - To enable colored output in Git, run git config --global color.ui true.
--To verify changes, run git config --list again and check that the updated values are displayed.
+-Open the Terminal application on your Mac.   
+-Type git config --list and press Enter to view all current Git configuration settings.   
+-To set your global username, run git config --global user.name "Your Name" replacing with your actual name.   
+-To set your global email, run git config --global user.email "your@email.com" replacing with your actual email.   
+-Optional - To change the default text editor, run git config --global core.editor emacs or replace emacs with your preferred editor.   
+-Optional - To enable colored output in Git, run git config --global color.ui true.   
+-To verify changes, run git config --list again and check that the updated values are displayed.   
 
-If you need to update a value, rerun the corresponding git config --global command with the new information.
+If you need to update a value, rerun the corresponding git config --global command with the new information.   
 
-To setup a ssh key [GitHubSSHKey](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+To setup a ssh key [GitHubSSHKey](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)   
 
-[VideoSetup](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
-[VideoSSHKey](https://www.youtube.com/watch?v=6U53fsMiPm0)
+[VideoSetup](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)   
+[VideoSSHKey](https://www.youtube.com/watch?v=6U53fsMiPm0)   
 
 ## Windows
--Open Terminal/Powershell
--Type git config --list and press Enter to view all current Git configuration settings.
--To set your global username, run git config --global user.name "Your Name" replacing with your actual name.
--To set your global email, run git config --global user.email "your@email.com" replacing with your actual email.
--Optional - To change the default text editor, run git config --global core.editor emacs or replace emacs with your preferred editor.
--Optional - To enable colored output in Git, run git config --global color.ui true.
--To verify changes, run git config --list again and check that the updated values are displayed.
+-Open Terminal/Powershell   
+-Type git config --list and press Enter to view all current Git configuration settings.   
+-To set your global username, run git config --global user.name "Your Name" replacing with your actual name.   
+-To set your global email, run git config --global user.email "your@email.com" replacing with your actual email.   
+-Optional - To change the default text editor, run git config --global core.editor emacs or replace emacs with your preferred editor.   
+-Optional - To enable colored output in Git, run git config --global color.ui true.   
+-To verify changes, run git config --list again and check that the updated values are displayed.   
 
-[VideoSetup](https://www.youtube.com/watch?v=AdzKzlp66sQ&pp=ygUjc2V0dXAgYW5kIGNvbmZpZ3VyZSBnaXQgb24gIHdpbmRvd3M%3D)
-[VideoSSHKey](https://www.youtube.com/watch?v=6U53fsMiPm0)
+[VideoSetup](https://www.youtube.com/watch?v=AdzKzlp66sQ&pp=ygUjc2V0dXAgYW5kIGNvbmZpZ3VyZSBnaXQgb24gIHdpbmRvd3M%3D)   
+[VideoSSHKey](https://www.youtube.com/watch?v=6U53fsMiPm0)   
 
 # React + Vite
 
