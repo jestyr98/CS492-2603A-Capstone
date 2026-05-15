@@ -4,25 +4,27 @@ import logo from './assets/logo.svg'
 import XIcon from '@mui/icons-material/X';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import InstagramIcon from '@mui/icons-material/Instagram';
+import MenuIcon from '@mui/icons-material/Menu';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 
 const menuSections = [
   {
-    id: 'salads',
-    title: 'Salads',
+    id: 'specials',
+    title: 'Specials',
     items: [
       {
-        name: 'Garden House Salad',
-        description: 'Crisp romaine, cherry tomatoes, cucumbers, and parmesan with herb vinaigrette.',
-        price: '$8.99',
-        photo:
-          'placeholder',
+        name: 'Weekly Special Pizza',
+        description: 'Chef\'s featured pizza with seasonal ingredients and special toppings.',
+        price: '$15.99',
+        photo: 'placeholder',
       },
       {
-        name: 'Chicken Caesar',
-        description: 'Grilled chicken, shaved parmesan, garlic croutons, and classic Caesar dressing.',
-        price: '$10.99',
-        photo:
-          'placeholder',
+        name: 'Combo Deal',
+        description: 'Pizza, wings, and a beverage combo at a special price.',
+        price: '$24.99',
+        photo: 'placeholder',
       },
     ],
   },
@@ -61,6 +63,26 @@ const menuSections = [
         name: 'Honey Garlic Wings',
         description: 'Sweet and savory glaze on bone-in wings with celery and house dip.',
         price: '$13.49',
+        photo:
+          'placeholder',
+      },
+    ],
+  },
+  {
+    id: 'salads',
+    title: 'Salads',
+    items: [
+      {
+        name: 'Garden House Salad',
+        description: 'Crisp romaine, cherry tomatoes, cucumbers, and parmesan with herb vinaigrette.',
+        price: '$8.99',
+        photo:
+          'placeholder',
+      },
+      {
+        name: 'Chicken Caesar',
+        description: 'Grilled chicken, shaved parmesan, garlic croutons, and classic Caesar dressing.',
+        price: '$10.99',
         photo:
           'placeholder',
       },
@@ -109,10 +131,15 @@ const menuSections = [
 ]
 
 function App() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null)
+  const isMenuOpen = Boolean(menuAnchorEl)
+
+  const openMenu = (event) => {
+    setMenuAnchorEl(event.currentTarget)
+  }
 
   const closeMenu = () => {
-    setIsMenuOpen(false)
+    setMenuAnchorEl(null)
   }
 
   return (
@@ -123,49 +150,53 @@ function App() {
             <img src={logo} alt="Operation Pizzeria logo" className="header-logo" />
             <h1 className="header-name">Operation Pizzeria</h1>
           </a>
-
-          <button
-            className="menu-toggle"
-            type="button"
-            aria-label="Toggle menu"
-            aria-expanded={isMenuOpen}
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <span className="menu-toggle_bar" />
-            <span className="menu-toggle_bar" />
-            <span className="menu-toggle_bar" />
-          </button>
-
-          <nav className={`header_nav ${isMenuOpen ? 'header_nav--open' : ''}`}>
-            <a href="#home" className="header_link" onClick={closeMenu}>Home</a>
-            <a href="#menu" className="header_link" onClick={closeMenu}>Menu</a>
-            <a href="#salads" className="header_link" onClick={closeMenu}>Salads</a>
-            <a href="#pizzas" className="header_link" onClick={closeMenu}>Pizzas</a>
+          
+          <nav className="header_nav">
+            <a href="#specials" className="header_link" onClick={closeMenu}>Specials</a>
             <a href="#contact" className="header_link" onClick={closeMenu}>Contact</a>
+            <a href="" className="header_link" onClick={closeMenu}>Sign In</a>
+
+            <IconButton
+              id="category-menu-button"
+              className="menu-toggle"
+              aria-label="Toggle menu categories"
+              aria-controls={isMenuOpen ? 'category-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={isMenuOpen}
+              onClick={openMenu}
+            >
+              <MenuIcon />
+            </IconButton>
+
+            <Menu
+              id="category-menu"
+              anchorEl={menuAnchorEl}
+              open={isMenuOpen}
+              onClose={closeMenu}
+              MenuListProps={{
+                'aria-labelledby': 'category-menu-button',
+              }}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+            >
+              <MenuItem component="a" href="#specials" onClick={closeMenu}>Specials</MenuItem>
+              <MenuItem component="a" href="#pizzas" onClick={closeMenu}>Pizzas</MenuItem>
+              <MenuItem component="a" href="#salads" onClick={closeMenu}>Salads</MenuItem>
+              <MenuItem component="a" href="#wings" onClick={closeMenu}>Wings</MenuItem>
+              <MenuItem component="a" href="#beverages" onClick={closeMenu}>Beverages</MenuItem>
+              <MenuItem component="a" href="#desserts" onClick={closeMenu}>Desserts</MenuItem>
+            </Menu>
           </nav>
         </div>
       </header>
 
       <main className="main-content">
-        <section className="hero-primary container" id="contact">
-          <article className="hero-card hero-card--contact">
-            <h2>Contact & Hours</h2>
-            <p>1408 Pepper Street, Columbia, SC 29201</p>
-            <p>
-              Phone: <a href="tel:+18035551234">(803) 555-1234</a>
-            </p>
-            <p>
-              Email: <a href="mailto:hello@operationpizzeria.com">hello@operationpizzeria.com</a>
-            </p>
-            <p>Mon-Thu: 11:00 AM - 9:00 PM | Fri-Sat: 11:00 AM - 11:00 PM | Sun: 12:00 PM - 8:00 PM</p>
-
-            <div className="social-links" aria-label="Social media links">
-              <a href="https://facebook.com" target="_blank" rel="noreferrer"><FacebookIcon /></a>
-              <a href="https://x.com" target="_blank" rel="noreferrer"><XIcon /></a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer"><InstagramIcon /></a>
-            </div>
-          </article>
-        </section>
 
         <section className="hero container">
           <article className="hero-card">
@@ -212,6 +243,27 @@ function App() {
             </section>
           ))}
         </section>
+
+        <section className="hero-primary container" id="contact">
+          <article className="hero-card hero-card--contact">
+            <h2>Contact & Hours</h2>
+            <p>1408 Pepper Street, Columbia, SC 29201</p>
+            <p>
+              Phone: <a href="tel:+18035551234">(803) 555-1234</a>
+            </p>
+            <p>
+              Email: <a href="mailto:hello@operationpizzeria.com">hello@operationpizzeria.com</a>
+            </p>
+            <p>Mon-Thu: 11:00 AM - 9:00 PM | Fri-Sat: 11:00 AM - 11:00 PM | Sun: 12:00 PM - 8:00 PM</p>
+
+            <div className="social-links" aria-label="Social media links">
+              <a href="https://facebook.com" target="_blank" rel="noreferrer"><FacebookIcon /></a>
+              <a href="https://x.com" target="_blank" rel="noreferrer"><XIcon /></a>
+              <a href="https://instagram.com" target="_blank" rel="noreferrer"><InstagramIcon /></a>
+            </div>
+          </article>
+        </section>
+
       </main>
     </>
   )
