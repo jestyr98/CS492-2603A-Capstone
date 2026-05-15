@@ -1,0 +1,16 @@
+const salads = [
+	{
+		name: 'Garden House Salad',
+		description: 'Crisp romaine, cherry tomatoes, cucumbers, and parmesan with herb vinaigrette.',
+		price: '$8.99',
+		photo: 'placeholder',
+	},
+	{
+		name: 'Chicken Caesar',
+		description: 'Grilled chicken, shaved parmesan, garlic croutons, and classic Caesar dressing.',
+		price: '$10.99',
+		photo: 'placeholder',
+	},
+]
+
+export default salads
