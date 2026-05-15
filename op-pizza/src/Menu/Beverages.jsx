@@ -1,15 +1,17 @@
+import sparklingSoda from '../assets/sparklingSoda.png'
+import sweetTea from '../assets/sweetTea.jpg'
 const beverages = [
 	{
 		name: 'Sparkling Citrus Soda',
-		description: '3L  bottle.',
+		description: '2L  bottle.',
 		price: '$2.99',
-		photo: 'placeholder',
+		photo: sparklingSoda,
 	},
 	{
 		name: 'Sweet Tea',
 		description: '1 gal jug.',
 		price: '$2.49',
-		photo: 'placeholder',
+		photo: sweetTea,
 	},
     {
 		name: 'Coke Classic',
