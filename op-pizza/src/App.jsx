@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import menuSections from './Menu/MenuSection'
+import signIn from './Login/login'
 
 function App() {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
@@ -17,9 +18,13 @@ function App() {
   const openMenu = (event) => {
     setMenuAnchorEl(event.currentTarget)
   }
-
   const closeMenu = () => {
     setMenuAnchorEl(null)
+  }
+
+  const [loginAnchorEl, setLoginAnchorEl] = useState(null)
+  const openLogin = (event) => {
+    setLoginAnchorEL(event.currentTarget)
   }
 
   return (
@@ -34,7 +39,7 @@ function App() {
           <nav className="header_nav">
             <a href="#specials" className="header_link" onClick={closeMenu}>Specials</a>
             <a href="#contact" className="header_link" onClick={closeMenu}>Contact</a>
-            <a href="" className="header_link" onClick={closeMenu}>Sign In</a>
+            <a href="#signIn" className="header_link" onClick={openLogin}>Sign In</a>
 
             <IconButton
               id="category-menu-button"
