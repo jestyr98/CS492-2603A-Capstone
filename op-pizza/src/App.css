@@ -201,9 +201,11 @@ a {
 }
 
 .menu-card_image {
-  width: fit-content;
-  height: fit-content;
-  padding-left:23%;
+  display: block;
+  width: 60%;
+  height: 200px;
+  object-fit: cover;
+  margin: 5% auto 0;
 }
 
 .menu-card_content {
