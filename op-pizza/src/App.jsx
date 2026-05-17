@@ -12,6 +12,10 @@ import menuSections from './Menu/MenuSection'
 
 function App() {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
+
+  const [showLogin, setShowLogin] = useState(false)
+  const [isSignedIn, setIsSignedIn] = useState(false)
+
   const isMenuOpen = Boolean(menuAnchorEl)
 
   const openMenu = (event) => {
@@ -34,7 +38,17 @@ function App() {
           <nav className="header_nav">
             <a href="#specials" className="header_link" onClick={closeMenu}>Specials</a>
             <a href="#contact" className="header_link" onClick={closeMenu}>Contact</a>
-            <a href="" className="header_link" onClick={closeMenu}>Sign In</a>
+            <a 
+              href="#signin"
+              className="header_link"
+              onClick={(event) => {
+                event.preventDefault()
+                closeMenu()
+                setShowLogin(true)
+              }}
+            >
+                {isSignedIn ? 'Signed In' : 'Sign In'}
+          </a>
 
             <IconButton
               id="category-menu-button"
@@ -145,6 +159,40 @@ function App() {
         </section>
 
       </main>
+      {showLogin && (
+        <div className="login-modal">
+          <div className="login-box">
+            <h2>Sign In</h2>
+
+            <input type="email" placeholder="Email" />
+            <input type="password" placeholder="Password" />
+
+            <button
+              onClick={() => {
+                setIsSignedIn(true)
+                setShowLogin(false)
+              }}
+            >
+              Login
+            </button>
+
+            <a
+              href="#forgot-password"
+              className="forgot-password"
+              onClick={(e) => {
+                e.preventDefault()
+                alert('Password reset link sent to your email.')
+              }}
+            >
+              Forgot Password?
+            </a>
+
+            <button onClick={() => setShowLogin(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </>
   )
 }
