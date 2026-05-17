@@ -291,3 +291,8 @@ a {
 .forgot-password:hover {
   text-decoration: underline;
 }
+
+.login-error {
+  color: #c62828;
+  font-size: 14px;
+  text-align: center;

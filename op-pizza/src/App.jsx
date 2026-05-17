@@ -13,6 +13,10 @@ import menuSections from './Menu/MenuSection'
 function App() {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
 
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
+
   const [showLogin, setShowLogin] = useState(false)
   const [isSignedIn, setIsSignedIn] = useState(false)
 
@@ -138,6 +142,24 @@ function App() {
           ))}
         </section>
 
+        {isSignedIn && (
+          <section id="customer-profile" className="customer-profile container">
+            <article className="hero-card">
+              <h2>Customer Profile</h2>
+              <p>Welcome back! Manage your account details below.</p>
+
+              <div className="profile-info">
+                <p><strong>Name:</strong> Guest Customer</p>
+                <p><strong>Email:</strong> customer@example.com</p>
+                <p><strong>Favorite Order:</strong> Pepperoni Pizza</p>
+                <p><strong>Rewards Points:</strong> 120</p>
+              </div>
+            </article>
+          </section>
+        )}
+
+
+
         <section className="hero-primary container" id="contact">
           <article className="hero-card hero-card--contact">
             <h2>Contact & Hours</h2>
@@ -164,17 +186,41 @@ function App() {
           <div className="login-box">
             <h2>Sign In</h2>
 
-            <input type="email" placeholder="Email" />
-            <input type="password" placeholder="Password" />
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              />
+
+          {loginError && <p className="login-error">{loginError}</p>}
 
             <button
               onClick={() => {
-                setIsSignedIn(true)
-                setShowLogin(false)
-              }}
-            >
-              Login
-            </button>
+                if (email === 'customer@example.com' && password === 'pizza123') {
+                  setIsSignedIn(true)
+                  setShowLogin(false)
+                  setLoginError('')
+
+                  setTimeout(() => {
+                    document
+                      .getElementById('customer-profile')
+                      ?.scrollIntoView({ behavior: 'smooth' })
+                  }, 100)
+               } else {
+                  setLoginError('Invalid email or password.')
+               }
+            }}
+          > 
+            Login
+          </button>
 
             <a
               href="#forgot-password"
