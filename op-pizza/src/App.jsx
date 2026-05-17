@@ -8,11 +8,14 @@ import MenuIcon from '@mui/icons-material/Menu';
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
 import menuSections from './Menu/MenuSection'
-import signIn from './Login/login'
+import Login from './Login/login'
 
 function App() {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
+  const [showLogin, setShowLogin] = useState(false)
   const isMenuOpen = Boolean(menuAnchorEl)
 
   const openMenu = (event) => {
@@ -22,9 +25,12 @@ function App() {
     setMenuAnchorEl(null)
   }
 
-  const [loginAnchorEl, setLoginAnchorEl] = useState(null)
   const openLogin = (event) => {
-    setLoginAnchorEL(event.currentTarget)
+    event.preventDefault()
+    setShowLogin(true)
+  }
+  const closeLogin = () => {
+    setShowLogin(false)
   }
 
   return (
@@ -150,6 +156,12 @@ function App() {
         </section>
 
       </main>
+
+      <Dialog open={showLogin} onClose={closeLogin} maxWidth="sm" fullWidth>
+        <DialogContent>
+          <Login />
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
