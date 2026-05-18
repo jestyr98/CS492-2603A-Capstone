@@ -23,7 +23,6 @@ app.set('trust proxy', TRUST_PROXY);
 
 app.use(
   helmet({
-    contentSecurityPolicy: false,
     crossOriginResourcePolicy: { policy: 'same-site' },
   })
 );
