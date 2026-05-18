@@ -19,6 +19,10 @@ function App() {
 
   const [showLogin, setShowLogin] = useState(false)
   const [isSignedIn, setIsSignedIn] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
+  const [showEditProfile, setShowEditProfile] = useState(false)
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
 
   const isMenuOpen = Boolean(menuAnchorEl)
 
@@ -51,7 +55,7 @@ function App() {
                 setShowLogin(true)
               }}
             >
-                {isSignedIn ? 'Signed In' : 'Sign In'}
+                {isSignedIn ? email : 'Sign In'}
           </a>
 
             <IconButton
@@ -89,6 +93,12 @@ function App() {
               <MenuItem component="a" href="#wings" onClick={closeMenu}>Wings</MenuItem>
               <MenuItem component="a" href="#beverages" onClick={closeMenu}>Beverages</MenuItem>
               <MenuItem component="a" href="#desserts" onClick={closeMenu}>Desserts</MenuItem>
+              {isSignedIn && (
+                <>
+                  <MenuItem onClick={() => { setShowProfile(true); closeMenu(); }}>View Profile</MenuItem>
+                  <MenuItem onClick={() => { setIsSignedIn(false); setEmail(''); setPassword(''); setName(''); setPhone(''); closeMenu(); }}>Sign Out</MenuItem>
+                </>
+              )}
             </Menu>
           </nav>
         </div>
@@ -142,21 +152,7 @@ function App() {
           ))}
         </section>
 
-        {isSignedIn && (
-          <section id="customer-profile" className="customer-profile container">
-            <article className="hero-card">
-              <h2>Customer Profile</h2>
-              <p>Welcome back! Manage your account details below.</p>
 
-              <div className="profile-info">
-                <p><strong>Name:</strong> Guest Customer</p>
-                <p><strong>Email:</strong> customer@example.com</p>
-                <p><strong>Favorite Order:</strong> Pepperoni Pizza</p>
-                <p><strong>Rewards Points:</strong> 120</p>
-              </div>
-            </article>
-          </section>
-        )}
 
 
 
@@ -234,6 +230,73 @@ function App() {
             </a>
 
             <button onClick={() => setShowLogin(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showProfile && !showEditProfile && (
+        <div className="login-modal">
+          <div className="login-box">
+            <h2>Customer Profile</h2>
+
+            <div className="profile-info">
+              <p><strong>Name:</strong> {name || 'Not set'}</p>
+              <p><strong>Email:</strong> {email}</p>
+              <p><strong>Phone:</strong> {phone || 'Not set'}</p>
+              <p><strong>Favorite Order:</strong> Pepperoni Pizza</p>
+              <p><strong>Rewards Points:</strong> 120</p>
+            </div>
+
+            <button onClick={() => setShowEditProfile(true)}>
+              Edit Profile
+            </button>
+
+            <button onClick={() => setShowProfile(false)}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showEditProfile && (
+        <div className="login-modal">
+          <div className="login-box">
+            <h2>Update Profile</h2>
+
+            <input
+              type="text"
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+
+            <input
+              type="tel"
+              placeholder="Phone Number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+
+            <button
+              onClick={() => {
+                setShowEditProfile(false)
+                setShowProfile(true)
+                alert('Profile updated successfully!')
+              }}
+            >
+              Save Changes
+            </button>
+
+            <button onClick={() => setShowEditProfile(false)}>
               Cancel
             </button>
           </div>
