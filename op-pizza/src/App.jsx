@@ -8,10 +8,8 @@ import MenuIcon from '@mui/icons-material/Menu';
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import Dialog from '@mui/material/Dialog';
-import DialogContent from '@mui/material/DialogContent';
 import menuSections from './Menu/MenuSection'
-import Login from './Login/login'
+
 
 function App() {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
@@ -29,14 +27,6 @@ function App() {
   }
   const closeMenu = () => {
     setMenuAnchorEl(null)
-  }
-
-  const openLogin = (event) => {
-    event.preventDefault()
-    setShowLogin(true)
-  }
-  const closeLogin = () => {
-    setShowLogin(false)
   }
 
   return (
