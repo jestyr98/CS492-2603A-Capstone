@@ -12,6 +12,14 @@ import menuSections from './Menu/MenuSection'
 
 function App() {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
+
+  const [showLogin, setShowLogin] = useState(false)
+  const [isSignedIn, setIsSignedIn] = useState(false)
+
   const isMenuOpen = Boolean(menuAnchorEl)
 
   const openMenu = (event) => {
@@ -34,7 +42,17 @@ function App() {
           <nav className="header_nav">
             <a href="#specials" className="header_link" onClick={closeMenu}>Specials</a>
             <a href="#contact" className="header_link" onClick={closeMenu}>Contact</a>
-            <a href="" className="header_link" onClick={closeMenu}>Sign In</a>
+            <a 
+              href="#signin"
+              className="header_link"
+              onClick={(event) => {
+                event.preventDefault()
+                closeMenu()
+                setShowLogin(true)
+              }}
+            >
+                {isSignedIn ? 'Signed In' : 'Sign In'}
+          </a>
 
             <IconButton
               id="category-menu-button"
@@ -124,6 +142,24 @@ function App() {
           ))}
         </section>
 
+        {isSignedIn && (
+          <section id="customer-profile" className="customer-profile container">
+            <article className="hero-card">
+              <h2>Customer Profile</h2>
+              <p>Welcome back! Manage your account details below.</p>
+
+              <div className="profile-info">
+                <p><strong>Name:</strong> Guest Customer</p>
+                <p><strong>Email:</strong> customer@example.com</p>
+                <p><strong>Favorite Order:</strong> Pepperoni Pizza</p>
+                <p><strong>Rewards Points:</strong> 120</p>
+              </div>
+            </article>
+          </section>
+        )}
+
+
+
         <section className="hero-primary container" id="contact">
           <article className="hero-card hero-card--contact">
             <h2>Contact & Hours</h2>
@@ -145,6 +181,64 @@ function App() {
         </section>
 
       </main>
+      {showLogin && (
+        <div className="login-modal">
+          <div className="login-box">
+            <h2>Sign In</h2>
+
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              />
+
+          {loginError && <p className="login-error">{loginError}</p>}
+
+            <button
+              onClick={() => {
+                if (email === 'customer@example.com' && password === 'pizza123') {
+                  setIsSignedIn(true)
+                  setShowLogin(false)
+                  setLoginError('')
+
+                  setTimeout(() => {
+                    document
+                      .getElementById('customer-profile')
+                      ?.scrollIntoView({ behavior: 'smooth' })
+                  }, 100)
+               } else {
+                  setLoginError('Invalid email or password.')
+               }
+            }}
+          > 
+            Login
+          </button>
+
+            <a
+              href="#forgot-password"
+              className="forgot-password"
+              onClick={(e) => {
+                e.preventDefault()
+                alert('Password reset link sent to your email.')
+              }}
+            >
+              Forgot Password?
+            </a>
+
+            <button onClick={() => setShowLogin(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </>
   )
 }
