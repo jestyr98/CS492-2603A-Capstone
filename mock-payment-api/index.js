@@ -5,6 +5,7 @@ const session = require('express-session');
 const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const lusca = require('lusca');
 const { z } = require('zod');
 
 const app = express();
@@ -55,6 +56,8 @@ app.use(
     legacyHeaders: false,
   })
 );
+
+app.use('/api', lusca.csrf());
 
 const tokenVault = new Map();
 const paymentsByIdempotency = new Map();
@@ -289,6 +292,10 @@ app.post('/v1/refunds', requireSecureTransport, requireBearerToken, (req, res) =
 });
 
 // ── Session auth routes ──────────────────────────────────────────
+
+app.get('/api/csrf-token', (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
 
 app.post('/api/login', requireSecureTransport, (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
