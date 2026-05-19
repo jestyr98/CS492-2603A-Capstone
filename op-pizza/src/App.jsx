@@ -9,6 +9,8 @@ import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import menuSections from './Menu/MenuSection'
+import ProfileModal from './Modals/ProfileModal'
+import SignInModal from './Modals/SignInModal'
 
 function App() {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
@@ -20,7 +22,6 @@ function App() {
   const [showLogin, setShowLogin] = useState(false)
   const [isSignedIn, setIsSignedIn] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
-  const [showEditProfile, setShowEditProfile] = useState(false)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
 
@@ -178,129 +179,42 @@ function App() {
 
       </main>
       {showLogin && (
-        <div className="login-modal">
-          <div className="login-box">
-            <h2>Sign In</h2>
+        <SignInModal
+          email={email}
+          password={password}
+          loginError={loginError}
+          onEmailChange={setEmail}
+          onPasswordChange={setPassword}
+          onLogin={() => {
+            if (email === 'customer@example.com' && password === 'pizza123') {
+              setIsSignedIn(true)
+              setShowLogin(false)
+              setLoginError('')
 
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              />
-
-          {loginError && <p className="login-error">{loginError}</p>}
-
-            <button
-              onClick={() => {
-                if (email === 'customer@example.com' && password === 'pizza123') {
-                  setIsSignedIn(true)
-                  setShowLogin(false)
-                  setLoginError('')
-
-                  setTimeout(() => {
-                    document
-                      .getElementById('customer-profile')
-                      ?.scrollIntoView({ behavior: 'smooth' })
-                  }, 100)
-               } else {
-                  setLoginError('Invalid email or password.')
-               }
-            }}
-          > 
-            Login
-          </button>
-
-            <a
-              href="#forgot-password"
-              className="forgot-password"
-              onClick={(e) => {
-                e.preventDefault()
-                alert('Password reset link sent to your email.')
-              }}
-            >
-              Forgot Password?
-            </a>
-
-            <button onClick={() => setShowLogin(false)}>
-              Cancel
-            </button>
-          </div>
-        </div>
+              setTimeout(() => {
+                document
+                  .getElementById('customer-profile')
+                  ?.scrollIntoView({ behavior: 'smooth' })
+              }, 100)
+            } else {
+              setLoginError('Invalid email or password.')
+            }
+          }}
+          onForgotPassword={() => alert('Password reset link sent to your email.')}
+          onClose={() => setShowLogin(false)}
+        />
       )}
 
-      {showProfile && !showEditProfile && (
-        <div className="login-modal">
-          <div className="login-box">
-            <h2>Customer Profile</h2>
-
-            <div className="profile-info">
-              <p><strong>Name:</strong> {name || 'Not set'}</p>
-              <p><strong>Email:</strong> {email}</p>
-              <p><strong>Phone:</strong> {phone || 'Not set'}</p>
-              <p><strong>Favorite Order:</strong> Pepperoni Pizza</p>
-              <p><strong>Rewards Points:</strong> 120</p>
-            </div>
-
-            <button onClick={() => setShowEditProfile(true)}>
-              Edit Profile
-            </button>
-
-            <button onClick={() => setShowProfile(false)}>
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showEditProfile && (
-        <div className="login-modal">
-          <div className="login-box">
-            <h2>Update Profile</h2>
-
-            <input
-              type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-
-            <input
-              type="tel"
-              placeholder="Phone Number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-
-            <button
-              onClick={() => {
-                setShowEditProfile(false)
-                setShowProfile(true)
-                alert('Profile updated successfully!')
-              }}
-            >
-              Save Changes
-            </button>
-
-            <button onClick={() => setShowEditProfile(false)}>
-              Cancel
-            </button>
-          </div>
-        </div>
+      {showProfile && (
+        <ProfileModal
+          email={email}
+          name={name}
+          phone={phone}
+          onClose={() => setShowProfile(false)}
+          onEmailChange={setEmail}
+          onNameChange={setName}
+          onPhoneChange={setPhone}
+        />
       )}
     </>
   )
