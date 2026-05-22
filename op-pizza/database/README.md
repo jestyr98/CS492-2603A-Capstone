@@ -51,11 +51,3 @@ sqlite3 op_pizza.db ".read schema.sql"
 sqlite3 op_pizza.db ".read seed.sql"
 sqlite3 op_pizza.db "SELECT customer_id, email, loyalty_points FROM customers;"
 ```
-
-## Suggested next integration step
-Map your existing frontend profile fields to `customers` + `customer_profiles`:
-- `email` -> `customers.email`
-- `name` -> split to `customers.first_name` and `customers.last_name`
-- `phone` -> `customers.phone`
-- `favorite order` -> `customer_profiles.favorite_order`
-- `rewards points` -> `customers.loyalty_points`
