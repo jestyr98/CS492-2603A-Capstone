@@ -41,6 +41,14 @@ To setup a ssh key [GitHubSSHKey](https://docs.github.com/en/authentication/conn
 
 # React + Vite
 
+## Database Starter
+
+A starter SQLite database schema has been added in `database/` for employees, inventory, and customer profile capture.
+
+- Schema: `database/schema.sql`
+- Seed data: `database/seed.sql`
+- Usage notes: `database/README.md`
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
