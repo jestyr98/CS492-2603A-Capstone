@@ -4,13 +4,12 @@ import logo from './assets/logo.svg'
 import XIcon from '@mui/icons-material/X';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import InstagramIcon from '@mui/icons-material/Instagram';
-import MenuIcon from '@mui/icons-material/Menu';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
+import NavMenu from './NavMenu'
+import CartIcon from './Cart'
 import menuSections from './Menu/MenuSection'
 import ProfileModal from './Modals/ProfileModal'
 import SignInModal from './Modals/SignInModal'
+import CartModal from './Modals/CartModal'
 
 function App() {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
@@ -24,6 +23,34 @@ function App() {
   const [showProfile, setShowProfile] = useState(false)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+
+  const [cartItems, setCartItems] = useState([])
+  const [showCart, setShowCart] = useState(false)
+
+  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
+
+  const addToCart = (item) => {
+    setCartItems((prev) => {
+      const existing = prev.find((i) => i.name === item.name)
+      if (existing) {
+        return prev.map((i) =>
+          i.name === item.name ? { ...i, quantity: i.quantity + 1 } : i
+        )
+      }
+      return [...prev, { ...item, quantity: 1 }]
+    })
+  }
+
+  const removeFromCart = (name) => {
+    setCartItems((prev) => prev.filter((i) => i.name !== name))
+  }
+
+  const updateQuantity = (name, quantity) => {
+    if (quantity < 1) return
+    setCartItems((prev) =>
+      prev.map((i) => (i.name === name ? { ...i, quantity } : i))
+    )
+  }
 
   const isMenuOpen = Boolean(menuAnchorEl)
 
@@ -59,48 +86,17 @@ function App() {
                 {isSignedIn ? email : 'Sign In'}
           </a>
 
-            <IconButton
-              id="category-menu-button"
-              className="menu-toggle"
-              aria-label="Toggle menu categories"
-              aria-controls={isMenuOpen ? 'category-menu' : undefined}
-              aria-haspopup="true"
-              aria-expanded={isMenuOpen}
-              onClick={openMenu}
-            >
-              <MenuIcon />
-            </IconButton>
+            <CartIcon itemCount={cartItemCount} onClick={() => setShowCart(true)} />
 
-            <Menu
-              id="category-menu"
-              anchorEl={menuAnchorEl}
-              open={isMenuOpen}
+            <NavMenu
+              isMenuOpen={isMenuOpen}
+              menuAnchorEl={menuAnchorEl}
+              isSignedIn={isSignedIn}
+              onOpen={openMenu}
               onClose={closeMenu}
-              MenuListProps={{
-                'aria-labelledby': 'category-menu-button',
-              }}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-            >
-              <MenuItem component="a" href="#specials" onClick={closeMenu}>Specials</MenuItem>
-              <MenuItem component="a" href="#pizzas" onClick={closeMenu}>Pizzas</MenuItem>
-              <MenuItem component="a" href="#salads" onClick={closeMenu}>Salads</MenuItem>
-              <MenuItem component="a" href="#wings" onClick={closeMenu}>Wings</MenuItem>
-              <MenuItem component="a" href="#beverages" onClick={closeMenu}>Beverages</MenuItem>
-              <MenuItem component="a" href="#desserts" onClick={closeMenu}>Desserts</MenuItem>
-              {isSignedIn && (
-                <>
-                  <MenuItem onClick={() => { setShowProfile(true); closeMenu(); }}>View Profile</MenuItem>
-                  <MenuItem onClick={() => { setIsSignedIn(false); setEmail(''); setPassword(''); setName(''); setPhone(''); closeMenu(); }}>Sign Out</MenuItem>
-                </>
-              )}
-            </Menu>
+              onViewProfile={() => { setShowProfile(true); closeMenu(); }}
+              onSignOut={() => { setIsSignedIn(false); setEmail(''); setPassword(''); setName(''); setPhone(''); closeMenu(); }}
+            />
           </nav>
         </div>
       </header>
@@ -145,6 +141,7 @@ function App() {
                       <h4>{item.name}</h4>
                       <p>{item.description}</p>
                       <p className="menu-card_price">{item.price}</p>
+                      <button onClick={() => addToCart(item)}>Add to Cart</button>
                     </div>
                   </article>
                 ))}
@@ -214,6 +211,15 @@ function App() {
           onEmailChange={setEmail}
           onNameChange={setName}
           onPhoneChange={setPhone}
+        />
+      )}
+
+      {showCart && (
+        <CartModal
+          cartItems={cartItems}
+          onClose={() => setShowCart(false)}
+          onRemove={removeFromCart}
+          onUpdateQuantity={updateQuantity}
         />
       )}
     </>
