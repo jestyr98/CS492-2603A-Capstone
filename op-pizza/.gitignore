@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 secrets.txt
+
+# Generated database file — rebuild with schema.sql + seed.sql
+database/*.db
