@@ -297,3 +297,41 @@ a {
   font-size: 14px;
   text-align: center;
 }
+
+.customization-options {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.customization-options select {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.topping-options {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.customize-heading {
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0;
+}
+
+.customize-note {
+  font-size: 14px;
+  text-align: center;
+  margin-top: 0;
+}
+
+.topping-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}

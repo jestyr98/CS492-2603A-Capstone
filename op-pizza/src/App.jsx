@@ -10,6 +10,7 @@ import menuSections from './Menu/MenuSection'
 import ProfileModal from './Modals/ProfileModal'
 import SignInModal from './Modals/SignInModal'
 import CartModal from './Modals/CartModal'
+import CustomizationModal from './Modals/CustomizationModal'
 
 function App() {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
@@ -27,28 +28,32 @@ function App() {
   const [cartItems, setCartItems] = useState([])
   const [showCart, setShowCart] = useState(false)
 
+  const [selectedItem, setSelectedItem] = useState(null)
+
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
   const addToCart = (item) => {
-    setCartItems((prev) => {
-      const existing = prev.find((i) => i.name === item.name)
-      if (existing) {
-        return prev.map((i) =>
-          i.name === item.name ? { ...i, quantity: i.quantity + 1 } : i
-        )
-      }
-      return [...prev, { ...item, quantity: 1 }]
-    })
+    setCartItems((prev) => [...prev, { ...item, quantity: 1 }])
   }
 
-  const removeFromCart = (name) => {
-    setCartItems((prev) => prev.filter((i) => i.name !== name))
-  }
-
-  const updateQuantity = (name, quantity) => {
-    if (quantity < 1) return
+  const removeFromCart = (cartId) => {
     setCartItems((prev) =>
-      prev.map((i) => (i.name === name ? { ...i, quantity } : i))
+      prev.filter((item) => item.cartId !== cartId)
+    )
+  }
+
+  const updateQuantity = (cartId, quantity) => {
+    if (quantity <= 0) {
+      removeFromCart(cartId)
+      return
+    }
+
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.cartId === cartId
+          ? { ...item, quantity }
+          : item
+      )
     )
   }
 
@@ -138,11 +143,23 @@ function App() {
                   <article className="menu-card" key={item.name}>
                     <img src={item.photo} alt={`${item.name} menu item`} className="menu-card_image" />
                     <div className="menu-card_content">
-                      <h4>{item.name}</h4>
-                      <p>{item.description}</p>
-                      <p className="menu-card_price">{item.price}</p>
-                      <button onClick={() => addToCart(item)}>Add to Cart</button>
-                    </div>
+  <h4>{item.name}</h4>
+  <p>{item.description}</p>
+  <p className="menu-card_price">
+  {item.price || `$${item.basePrice?.Large?.toFixed(2)}`}
+  </p>
+
+  {item.options ? (
+  <button onClick={() => setSelectedItem(item)}>
+    Customize
+  </button>
+) : (
+  <button onClick={() => addToCart(item)}>
+    Add to Cart
+  </button>
+)}
+
+</div>
                   </article>
                 ))}
               </div>
@@ -213,6 +230,17 @@ function App() {
           onPhoneChange={setPhone}
         />
       )}
+
+{selectedItem && (
+  <CustomizationModal
+    item={selectedItem}
+    onClose={() => setSelectedItem(null)}
+    onAddToCart={(customizedItem) => {
+      addToCart(customizedItem)
+      setSelectedItem(null)
+    }}
+  />
+)}
 
       {showCart && (
         <CartModal
