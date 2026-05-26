@@ -26,6 +26,28 @@ const APP_DB_DIR = path.resolve(__dirname, '..', 'op-pizza', 'database');
 const APP_DB_PATH = path.join(APP_DB_DIR, 'op_pizza.db');
 const APP_DB_SCHEMA_PATH = path.join(APP_DB_DIR, 'schema.sql');
 const APP_DB_SEED_PATH = path.join(APP_DB_DIR, 'seed.sql');
+const MENU_ITEM_PHOTOS = {
+  'Daily Lunch Special': 'twoPizzaDrink.jpg',
+  'Combo Deal': 'combo.jpg',
+  'Operation Supreme': 'supreme.jpg',
+  'Margherita Classic': 'margherita.jpg',
+  'Caprese Delight': 'caprese.png',
+  'Sicilian Special': 'sicilian.jpg',
+  'Veggie Supreme': 'veggie.jpg',
+  'Vegan Veggie': 'ewwww.jpg',
+  'Traditional Wings': 'traditional.jpg',
+  'Boneless Wings': 'boneless.jpg',
+  'Garden House Salad': 'garden.jpg',
+  'Chicken Caesar': 'caesar.jpg',
+  'Cinnamon Bread Bites': 'cinnamonbread.jpg',
+  'Chocolate Lava Cake': 'lavacake.jpg',
+  'Sparkling Citrus Soda': 'sparklingSoda.png',
+  'Sweet Tea': 'sweetTea.jpg',
+  'Coke Classic': 'coke.jpg',
+  'Diet Coke': 'dietcoke.jpg',
+  'Dr Pepper': 'drpepper.jpg',
+  'Big Red': 'bigred.jpg',
+};
 
 app.disable('x-powered-by');
 app.set('trust proxy', TRUST_PROXY);
@@ -185,6 +207,61 @@ function openMenuDb() {
   });
 }
 
+function dbRun(db, sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, (err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+function dbAll(db, sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(rows);
+    });
+  });
+}
+
+async function ensureMenuPhotoColumn(db) {
+  const columns = await dbAll(db, 'PRAGMA table_info(menu_items);');
+  const hasPhotoPathColumn = columns.some((column) => column.name === 'photo_path');
+
+  if (!hasPhotoPathColumn) {
+    await dbRun(db, 'ALTER TABLE menu_items ADD COLUMN photo_path TEXT;');
+  }
+}
+
+async function backfillMenuPhotoPaths(db) {
+  await dbRun(db, 'BEGIN TRANSACTION;');
+  try {
+    for (const [itemName, photoPath] of Object.entries(MENU_ITEM_PHOTOS)) {
+      await dbRun(
+        db,
+        `
+          UPDATE menu_items
+          SET photo_path = ?
+          WHERE item_name = ?
+            AND (photo_path IS NULL OR photo_path = '');
+        `,
+        [photoPath, itemName]
+      );
+    }
+    await dbRun(db, 'COMMIT;');
+  } catch (err) {
+    await dbRun(db, 'ROLLBACK;');
+    throw err;
+  }
+}
+
 async function ensureMenuDatabase() {
   if (!fs.existsSync(APP_DB_SCHEMA_PATH) || !fs.existsSync(APP_DB_SEED_PATH)) {
     throw new Error('Database schema/seed files not found in op-pizza/database.');
@@ -194,6 +271,8 @@ async function ensureMenuDatabase() {
   const db = await openMenuDb();
 
   if (!shouldBootstrap) {
+    await ensureMenuPhotoColumn(db);
+    await backfillMenuPhotoPaths(db);
     return db;
   }
 
@@ -210,6 +289,9 @@ async function ensureMenuDatabase() {
     });
   });
 
+  await ensureMenuPhotoColumn(db);
+  await backfillMenuPhotoPaths(db);
+
   return db;
 }
 
@@ -222,6 +304,7 @@ function getMenuSections(db) {
       m.menu_item_id,
       m.item_name,
       m.description,
+      m.photo_path,
       CASE
         WHEN m.is_special = 1 AND m.special_price IS NOT NULL THEN m.special_price
         ELSE m.base_price
@@ -257,6 +340,7 @@ function getMenuSections(db) {
             id: row.menu_item_id,
             name: row.item_name,
             description: row.description,
+            photoPath: row.photo_path || null,
             price: formatCurrency(row.display_price),
           });
         }

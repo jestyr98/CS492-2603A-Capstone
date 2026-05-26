@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS menu_items (
   category_id INTEGER NOT NULL,
   item_name TEXT NOT NULL,
   description TEXT NOT NULL,
+  photo_path TEXT,
   base_price REAL NOT NULL CHECK (base_price >= 0),
   is_special INTEGER NOT NULL DEFAULT 0 CHECK (is_special IN (0, 1)),
   special_price REAL CHECK (special_price IS NULL OR special_price >= 0),

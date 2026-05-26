@@ -6,6 +6,7 @@ import MenuItem from '@mui/material/MenuItem';
 function NavMenu({
   isMenuOpen,
   menuAnchorEl,
+  menuSections,
   isSignedIn,
   onOpen,
   onClose,
@@ -43,12 +44,11 @@ function NavMenu({
           horizontal: 'right',
         }}
       >
-        <MenuItem component="a" href="#specials" onClick={onClose}>Specials</MenuItem>
-        <MenuItem component="a" href="#pizzas" onClick={onClose}>Pizzas</MenuItem>
-        <MenuItem component="a" href="#salads" onClick={onClose}>Salads</MenuItem>
-        <MenuItem component="a" href="#wings" onClick={onClose}>Wings</MenuItem>
-        <MenuItem component="a" href="#beverages" onClick={onClose}>Beverages</MenuItem>
-        <MenuItem component="a" href="#desserts" onClick={onClose}>Desserts</MenuItem>
+        {(menuSections || []).map((section) => (
+          <MenuItem key={section.id} component="a" href={`#${section.id}`} onClick={onClose}>
+            {section.title}
+          </MenuItem>
+        ))}
         {isSignedIn && (
           <>
             <MenuItem onClick={onViewProfile}>View Profile</MenuItem>

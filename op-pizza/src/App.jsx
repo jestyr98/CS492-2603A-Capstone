@@ -10,6 +10,20 @@ import ProfileModal from './Modals/ProfileModal'
 import SignInModal from './Modals/SignInModal'
 import CartModal from './Modals/CartModal'
 
+const menuImageModules = import.meta.glob('./assets/*.{jpg,jpeg,png,svg,webp}', {
+  eager: true,
+  import: 'default',
+})
+
+function resolveMenuImage(photoPath) {
+  if (!photoPath) {
+    return null
+  }
+
+  const normalizedPhotoPath = photoPath.replace(/^\.?\/+/, '')
+  return menuImageModules[`./assets/${normalizedPhotoPath}`] || null
+}
+
 function App() {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
 
@@ -90,6 +104,9 @@ function App() {
   }
 
   const isMenuOpen = Boolean(menuAnchorEl)
+  const primaryMenuSection = menuSections[0]
+  const primaryMenuHref = primaryMenuSection ? `#${primaryMenuSection.id}` : '#menu'
+  const primaryMenuLabel = primaryMenuSection ? primaryMenuSection.title : 'Menu'
 
   const openMenu = (event) => {
     setMenuAnchorEl(event.currentTarget)
@@ -109,7 +126,7 @@ function App() {
           </a>
           
           <nav className="header_nav">
-            <a href="#specials" className="header_link" onClick={closeMenu}>Specials</a>
+            <a href={primaryMenuHref} className="header_link" onClick={closeMenu}>{primaryMenuLabel}</a>
             <a href="#contact" className="header_link" onClick={closeMenu}>Contact</a>
             <a 
               href="#signin"
@@ -128,6 +145,7 @@ function App() {
             <NavMenu
               isMenuOpen={isMenuOpen}
               menuAnchorEl={menuAnchorEl}
+              menuSections={menuSections}
               isSignedIn={isSignedIn}
               onOpen={openMenu}
               onClose={closeMenu}
@@ -176,7 +194,7 @@ function App() {
               <div className="menu-grid">
                 {section.items.map((item) => (
                   <article className="menu-card" key={item.id || item.name}>
-                    <img src={item.photo || logo} alt={`${item.name} menu item`} className="menu-card_image" />
+                    <img src={resolveMenuImage(item.photoPath) || logo} alt={`${item.name} menu item`} className="menu-card_image" />
                     <div className="menu-card_content">
                       <h4>{item.name}</h4>
                       <p>{item.description}</p>

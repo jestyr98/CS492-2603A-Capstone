@@ -42,89 +42,89 @@ VALUES
   ('desserts', 'Desserts', 5, 1),
   ('beverages', 'Beverages', 6, 1);
 
-INSERT INTO menu_items (category_id, item_name, description, base_price, is_special, special_price, is_active)
-SELECT category_id, 'Daily Lunch Special', 'Two slices of pizza and a beverage for a special price, available Monday through Friday from 11am to 2pm.', 9.99, 1, 9.99, 1
+INSERT INTO menu_items (category_id, item_name, description, photo_path, base_price, is_special, special_price, is_active)
+SELECT category_id, 'Daily Lunch Special', 'Two slices of pizza and a beverage for a special price, available Monday through Friday from 11am to 2pm.', 'twoPizzaDrink.jpg', 9.99, 1, 9.99, 1
 FROM menu_categories
 WHERE slug = 'specials'
 UNION ALL
-SELECT category_id, 'Combo Deal', 'Pizza, wings, and a beverage combo at a special price.', 24.99, 1, 24.99, 1
+SELECT category_id, 'Combo Deal', 'Pizza, wings, and a beverage combo at a special price.', 'combo.jpg', 24.99, 1, 24.99, 1
 FROM menu_categories
 WHERE slug = 'specials';
 
-INSERT INTO menu_items (category_id, item_name, description, base_price, is_special, special_price, is_active)
-SELECT category_id, 'Operation Supreme', 'Pepperoni, sausage, Canadian bacon, black olives, bell peppers, mushrooms, onions, and mozzarella.', 16.99, 0, NULL, 1
+INSERT INTO menu_items (category_id, item_name, description, photo_path, base_price, is_special, special_price, is_active)
+SELECT category_id, 'Operation Supreme', 'Pepperoni, sausage, Canadian bacon, black olives, bell peppers, mushrooms, onions, and mozzarella.', 'supreme.jpg', 16.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'pizzas'
 UNION ALL
-SELECT category_id, 'Margherita Classic', 'Fresh basil, tomato sauce, and mozzarella on hand-tossed dough.', 14.49, 0, NULL, 1
+SELECT category_id, 'Margherita Classic', 'Fresh basil, tomato sauce, and mozzarella on hand-tossed dough.', 'margherita.jpg', 14.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'pizzas'
 UNION ALL
-SELECT category_id, 'Caprese Delight', 'Basil Pesto sauce, roasted tomatoes, fresh mozzarella, and drizzled balsamic glaze on hand-tossed dough.', 14.49, 0, NULL, 1
+SELECT category_id, 'Caprese Delight', 'Basil Pesto sauce, roasted tomatoes, fresh mozzarella, and drizzled balsamic glaze on hand-tossed dough.', 'caprese.png', 14.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'pizzas'
 UNION ALL
-SELECT category_id, 'Sicilian Special', 'Pepperoni, salami, Italian sausage, tomato sauce, and mozzarella on hand-tossed dough.', 14.49, 0, NULL, 1
+SELECT category_id, 'Sicilian Special', 'Pepperoni, salami, Italian sausage, tomato sauce, and mozzarella on hand-tossed dough.', 'sicilian.jpg', 14.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'pizzas'
 UNION ALL
-SELECT category_id, 'Veggie Supreme', 'Black olives, bell peppers, mushrooms, onions, diced tomatoes, tomato sauce, and mozzarella on hand-tossed dough.', 14.49, 0, NULL, 1
+SELECT category_id, 'Veggie Supreme', 'Black olives, bell peppers, mushrooms, onions, diced tomatoes, tomato sauce, and mozzarella on hand-tossed dough.', 'veggie.jpg', 14.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'pizzas'
 UNION ALL
-SELECT category_id, 'Vegan Veggie', 'Black olives, bell peppers, mushrooms, onions, diced tomatoes, tomato sauce, and vegan cheese on cauliflower crust.', 14.49, 0, NULL, 1
+SELECT category_id, 'Vegan Veggie', 'Black olives, bell peppers, mushrooms, onions, diced tomatoes, tomato sauce, and vegan cheese on cauliflower crust.', 'ewwww.jpg', 14.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'pizzas';
 
-INSERT INTO menu_items (category_id, item_name, description, base_price, is_special, special_price, is_active)
-SELECT category_id, 'Traditional Wings', 'Ten crispy wings tossed in your choice of sauce.  Every 5 wings comes with option to choose another sauce and dip.', 12.99, 0, NULL, 1
+INSERT INTO menu_items (category_id, item_name, description, photo_path, base_price, is_special, special_price, is_active)
+SELECT category_id, 'Traditional Wings', 'Ten crispy wings tossed in your choice of sauce.  Every 5 wings comes with option to choose another sauce and dip.', 'traditional.jpg', 12.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'wings'
 UNION ALL
-SELECT category_id, 'Boneless Wings', 'Ten crispy boneless wings tossed in your choice of sauce.  Every 5 wings comes with option to choose another sauce and dip.', 13.49, 0, NULL, 1
+SELECT category_id, 'Boneless Wings', 'Ten crispy boneless wings tossed in your choice of sauce.  Every 5 wings comes with option to choose another sauce and dip.', 'boneless.jpg', 13.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'wings';
 
-INSERT INTO menu_items (category_id, item_name, description, base_price, is_special, special_price, is_active)
-SELECT category_id, 'Garden House Salad', 'Crisp romaine, cherry tomatoes, cucumbers, croutons, and parmesan with herb vinaigrette.', 8.99, 0, NULL, 1
+INSERT INTO menu_items (category_id, item_name, description, photo_path, base_price, is_special, special_price, is_active)
+SELECT category_id, 'Garden House Salad', 'Crisp romaine, cherry tomatoes, cucumbers, croutons, and parmesan with herb vinaigrette.', 'garden.jpg', 8.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'salads'
 UNION ALL
-SELECT category_id, 'Chicken Caesar', 'Grilled chicken, shaved parmesan, garlic croutons, and classic Caesar dressing.', 10.99, 0, NULL, 1
+SELECT category_id, 'Chicken Caesar', 'Grilled chicken, shaved parmesan, garlic croutons, and classic Caesar dressing.', 'caesar.jpg', 10.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'salads';
 
-INSERT INTO menu_items (category_id, item_name, description, base_price, is_special, special_price, is_active)
-SELECT category_id, 'Cinnamon Bread Bites', 'Warm baked bites glazed with cinnamon sugar and vanilla icing.', 6.99, 0, NULL, 1
+INSERT INTO menu_items (category_id, item_name, description, photo_path, base_price, is_special, special_price, is_active)
+SELECT category_id, 'Cinnamon Bread Bites', 'Warm baked bites glazed with cinnamon sugar and vanilla icing.', 'cinnamonbread.jpg', 6.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'desserts'
 UNION ALL
-SELECT category_id, 'Chocolate Lava Cake', 'Rich chocolate cake with a molten center and powdered sugar finish.', 7.49, 0, NULL, 1
+SELECT category_id, 'Chocolate Lava Cake', 'Rich chocolate cake with a molten center and powdered sugar finish.', 'lavacake.jpg', 7.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'desserts';
 
-INSERT INTO menu_items (category_id, item_name, description, base_price, is_special, special_price, is_active)
-SELECT category_id, 'Sparkling Citrus Soda', '2L  bottle', 2.99, 0, NULL, 1
+INSERT INTO menu_items (category_id, item_name, description, photo_path, base_price, is_special, special_price, is_active)
+SELECT category_id, 'Sparkling Citrus Soda', '2L  bottle', 'sparklingSoda.png', 2.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'beverages'
 UNION ALL
-SELECT category_id, 'Sweet Tea', '1 gal jug', 2.49, 0, NULL, 1
+SELECT category_id, 'Sweet Tea', '1 gal jug', 'sweetTea.jpg', 2.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'beverages'
 UNION ALL
-SELECT category_id, 'Coke Classic', '2L  bottle', 2.99, 0, NULL, 1
+SELECT category_id, 'Coke Classic', '2L  bottle', 'coke.jpg', 2.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'beverages'
 UNION ALL
-SELECT category_id, 'Diet Coke', '2L bottle', 2.99, 0, NULL, 1
+SELECT category_id, 'Diet Coke', '2L bottle', 'dietcoke.jpg', 2.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'beverages'
 UNION ALL
-SELECT category_id, 'Dr Pepper', '2L bottle', 2.99, 0, NULL, 1
+SELECT category_id, 'Dr Pepper', '2L bottle', 'drpepper.jpg', 2.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'beverages'
 UNION ALL
-SELECT category_id, 'Big Red', '2L bottle', 2.99, 0, NULL, 1
+SELECT category_id, 'Big Red', '2L bottle', 'bigred.jpg', 2.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'beverages';
 
