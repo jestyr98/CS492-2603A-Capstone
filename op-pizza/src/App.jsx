@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import logo from './assets/logo.svg'
 import XIcon from '@mui/icons-material/X';
@@ -6,7 +6,6 @@ import FacebookIcon from '@mui/icons-material/Facebook';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import NavMenu from './NavMenu'
 import CartIcon from './Cart'
-import menuSections from './Menu/MenuSection'
 import ProfileModal from './Modals/ProfileModal'
 import SignInModal from './Modals/SignInModal'
 import CartModal from './Modals/CartModal'
@@ -26,6 +25,44 @@ function App() {
 
   const [cartItems, setCartItems] = useState([])
   const [showCart, setShowCart] = useState(false)
+  const [menuSections, setMenuSections] = useState([])
+  const [menuLoading, setMenuLoading] = useState(true)
+  const [menuError, setMenuError] = useState('')
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadMenu = async () => {
+      setMenuLoading(true)
+      setMenuError('')
+
+      try {
+        const response = await fetch('/api/menu')
+        if (!response.ok) {
+          throw new Error(`Menu request failed with status ${response.status}`)
+        }
+
+        const data = await response.json()
+        if (isMounted) {
+          setMenuSections(data.sections || [])
+        }
+      } catch {
+        if (isMounted) {
+          setMenuError('Unable to load menu right now. Please try again in a moment.')
+        }
+      } finally {
+        if (isMounted) {
+          setMenuLoading(false)
+        }
+      }
+    }
+
+    loadMenu()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
@@ -130,13 +167,16 @@ function App() {
             ))}
           </div>
 
-          {menuSections.map((section) => (
+          {menuLoading && <p>Loading menu...</p>}
+          {!menuLoading && menuError && <p>{menuError}</p>}
+
+          {!menuLoading && !menuError && menuSections.map((section) => (
             <section key={section.id} id={section.id} className="menu-section">
               <h3>{section.title}</h3>
               <div className="menu-grid">
                 {section.items.map((item) => (
-                  <article className="menu-card" key={item.name}>
-                    <img src={item.photo} alt={`${item.name} menu item`} className="menu-card_image" />
+                  <article className="menu-card" key={item.id || item.name}>
+                    <img src={item.photo || logo} alt={`${item.name} menu item`} className="menu-card_image" />
                     <div className="menu-card_content">
                       <h4>{item.name}</h4>
                       <p>{item.description}</p>
