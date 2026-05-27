@@ -8,9 +8,12 @@ function NavMenu({
   menuAnchorEl,
   menuSections,
   isSignedIn,
+  accountType,
+  canAccessAdminMenu,
   onOpen,
   onClose,
   onViewProfile,
+  onOpenAdmin,
   onSignOut,
 }) {
   return (
@@ -49,7 +52,18 @@ function NavMenu({
             {section.title}
           </MenuItem>
         ))}
-        {isSignedIn && (
+        {isSignedIn && accountType === 'employee' && (
+          <>
+            <MenuItem
+              onClick={canAccessAdminMenu ? onOpenAdmin : undefined}
+              disabled={!canAccessAdminMenu}
+            >
+              Admin
+            </MenuItem>
+            <MenuItem onClick={onSignOut}>Sign Out</MenuItem>
+          </>
+        )}
+        {isSignedIn && accountType !== 'employee' && (
           <>
             <MenuItem onClick={onViewProfile}>View Profile</MenuItem>
             <MenuItem onClick={onSignOut}>Sign Out</MenuItem>

@@ -4,6 +4,9 @@ DELETE FROM customer_order_status_history;
 DELETE FROM customer_order_items;
 DELETE FROM customer_orders;
 DELETE FROM customer_addresses;
+DELETE FROM menu_item_ingredients;
+DELETE FROM category_ingredients;
+DELETE FROM ingredients;
 DELETE FROM menu_items;
 DELETE FROM menu_categories;
 DELETE FROM employee_credentials;
@@ -127,6 +130,221 @@ UNION ALL
 SELECT category_id, 'Big Red', '2L bottle', 'bigred.jpg', 2.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'beverages';
+
+INSERT INTO ingredients (ingredient_name, is_active)
+VALUES
+  ('Tomato Sauce', 1),
+  ('Basil Pesto', 1),
+  ('Mozzarella Cheese', 1),
+  ('Fresh Mozzarella', 1),
+  ('Vegan Cheese', 1),
+  ('Pepperoni', 1),
+  ('Italian Sausage', 1),
+  ('Canadian Bacon', 1),
+  ('Salami', 1),
+  ('Black Olives', 1),
+  ('Bell Peppers', 1),
+  ('Mushrooms', 1),
+  ('Onions', 1),
+  ('Diced Tomatoes', 1),
+  ('Fresh Basil', 1),
+  ('Balsamic Glaze', 1),
+  ('Romaine Lettuce', 1),
+  ('Cherry Tomatoes', 1),
+  ('Cucumbers', 1),
+  ('Croutons', 1),
+  ('Parmesan', 1),
+  ('Herb Vinaigrette', 1),
+  ('Caesar Dressing', 1),
+  ('Chicken', 1),
+  ('Buffalo Sauce', 1),
+  ('BBQ Sauce', 1),
+  ('Ranch Dip', 1),
+  ('Blue Cheese Dip', 1),
+  ('Beverage Syrup', 1),
+  ('Dessert Mix', 1);
+
+INSERT INTO category_ingredients (category_id, ingredient_id)
+SELECT c.category_id, i.ingredient_id
+FROM menu_categories c
+JOIN ingredients i ON i.ingredient_name IN ('Buffalo Sauce', 'Ranch Dip', 'Blue Cheese Dip', 'Beverage Syrup')
+WHERE c.slug = 'specials'
+UNION ALL
+SELECT c.category_id, i.ingredient_id
+FROM menu_categories c
+JOIN ingredients i ON i.ingredient_name IN ('Tomato Sauce', 'Basil Pesto', 'Mozzarella Cheese', 'Fresh Mozzarella', 'Vegan Cheese', 'Pepperoni', 'Italian Sausage', 'Canadian Bacon', 'Salami', 'Black Olives', 'Bell Peppers', 'Mushrooms', 'Onions', 'Diced Tomatoes', 'Fresh Basil', 'Balsamic Glaze')
+WHERE c.slug = 'pizzas'
+UNION ALL
+SELECT c.category_id, i.ingredient_id
+FROM menu_categories c
+JOIN ingredients i ON i.ingredient_name IN ('Chicken', 'Buffalo Sauce', 'BBQ Sauce', 'Ranch Dip', 'Blue Cheese Dip')
+WHERE c.slug = 'wings'
+UNION ALL
+SELECT c.category_id, i.ingredient_id
+FROM menu_categories c
+JOIN ingredients i ON i.ingredient_name IN ('Romaine Lettuce', 'Cherry Tomatoes', 'Cucumbers', 'Croutons', 'Parmesan', 'Herb Vinaigrette', 'Caesar Dressing', 'Chicken')
+WHERE c.slug = 'salads'
+UNION ALL
+SELECT c.category_id, i.ingredient_id
+FROM menu_categories c
+JOIN ingredients i ON i.ingredient_name IN ('Dessert Mix')
+WHERE c.slug = 'desserts'
+UNION ALL
+SELECT c.category_id, i.ingredient_id
+FROM menu_categories c
+JOIN ingredients i ON i.ingredient_name IN ('Beverage Syrup')
+WHERE c.slug = 'beverages';
+
+INSERT INTO menu_item_ingredients (menu_item_id, ingredient_id)
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Tomato Sauce'
+WHERE m.item_name IN ('Operation Supreme', 'Margherita Classic', 'Sicilian Special', 'Veggie Supreme', 'Vegan Veggie')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Basil Pesto'
+WHERE m.item_name = 'Caprese Delight'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Mozzarella Cheese'
+WHERE m.item_name IN ('Operation Supreme', 'Margherita Classic', 'Sicilian Special', 'Veggie Supreme')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Fresh Mozzarella'
+WHERE m.item_name = 'Caprese Delight'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Vegan Cheese'
+WHERE m.item_name = 'Vegan Veggie'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Pepperoni'
+WHERE m.item_name IN ('Operation Supreme', 'Sicilian Special')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Italian Sausage'
+WHERE m.item_name IN ('Operation Supreme', 'Sicilian Special')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Canadian Bacon'
+WHERE m.item_name = 'Operation Supreme'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Salami'
+WHERE m.item_name = 'Sicilian Special'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Black Olives'
+WHERE m.item_name IN ('Operation Supreme', 'Veggie Supreme', 'Vegan Veggie')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Bell Peppers'
+WHERE m.item_name IN ('Operation Supreme', 'Veggie Supreme', 'Vegan Veggie')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Mushrooms'
+WHERE m.item_name IN ('Operation Supreme', 'Veggie Supreme', 'Vegan Veggie')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Onions'
+WHERE m.item_name IN ('Operation Supreme', 'Veggie Supreme', 'Vegan Veggie')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Diced Tomatoes'
+WHERE m.item_name IN ('Caprese Delight', 'Veggie Supreme', 'Vegan Veggie')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Fresh Basil'
+WHERE m.item_name = 'Margherita Classic'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Balsamic Glaze'
+WHERE m.item_name = 'Caprese Delight'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Romaine Lettuce'
+WHERE m.item_name IN ('Garden House Salad', 'Chicken Caesar')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Cherry Tomatoes'
+WHERE m.item_name = 'Garden House Salad'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Cucumbers'
+WHERE m.item_name = 'Garden House Salad'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Croutons'
+WHERE m.item_name IN ('Garden House Salad', 'Chicken Caesar')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Parmesan'
+WHERE m.item_name IN ('Garden House Salad', 'Chicken Caesar')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Herb Vinaigrette'
+WHERE m.item_name = 'Garden House Salad'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Caesar Dressing'
+WHERE m.item_name = 'Chicken Caesar'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Chicken'
+WHERE m.item_name IN ('Chicken Caesar', 'Traditional Wings', 'Boneless Wings')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Buffalo Sauce'
+WHERE m.item_name IN ('Traditional Wings', 'Combo Deal')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'BBQ Sauce'
+WHERE m.item_name = 'Boneless Wings'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Ranch Dip'
+WHERE m.item_name IN ('Traditional Wings', 'Boneless Wings', 'Combo Deal')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Blue Cheese Dip'
+WHERE m.item_name IN ('Traditional Wings', 'Boneless Wings')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Beverage Syrup'
+WHERE m.item_name IN ('Daily Lunch Special', 'Sparkling Citrus Soda', 'Sweet Tea', 'Coke Classic', 'Diet Coke', 'Dr Pepper', 'Big Red')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Dessert Mix'
+WHERE m.item_name IN ('Cinnamon Bread Bites', 'Chocolate Lava Cake');
 
 INSERT INTO customers (email, first_name, last_name, phone, loyalty_points, marketing_opt_in, last_login_at)
 VALUES
