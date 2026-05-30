@@ -4,6 +4,9 @@ DELETE FROM customer_order_status_history;
 DELETE FROM customer_order_items;
 DELETE FROM customer_orders;
 DELETE FROM customer_addresses;
+DELETE FROM menu_item_ingredients;
+DELETE FROM category_ingredients;
+DELETE FROM ingredients;
 DELETE FROM menu_items;
 DELETE FROM menu_categories;
 DELETE FROM employee_credentials;
@@ -42,91 +45,306 @@ VALUES
   ('desserts', 'Desserts', 5, 1),
   ('beverages', 'Beverages', 6, 1);
 
-INSERT INTO menu_items (category_id, item_name, description, base_price, is_special, special_price, is_active)
-SELECT category_id, 'Daily Lunch Special', 'Two slices of pizza and a beverage for a special price, available Monday through Friday from 11am to 2pm.', 9.99, 1, 9.99, 1
+INSERT INTO menu_items (category_id, item_name, description, photo_path, base_price, is_special, special_price, is_active)
+SELECT category_id, 'Daily Lunch Special', 'Two slices of pizza and a beverage for a special price, available Monday through Friday from 11am to 2pm.', 'twoPizzaDrink.jpg', 9.99, 1, 9.99, 1
 FROM menu_categories
 WHERE slug = 'specials'
 UNION ALL
-SELECT category_id, 'Combo Deal', 'Pizza, wings, and a beverage combo at a special price.', 24.99, 1, 24.99, 1
+SELECT category_id, 'Combo Deal', 'Pizza, wings, and a beverage combo at a special price.', 'combo.jpg', 24.99, 1, 24.99, 1
 FROM menu_categories
 WHERE slug = 'specials';
 
-INSERT INTO menu_items (category_id, item_name, description, base_price, is_special, special_price, is_active)
-SELECT category_id, 'Operation Supreme', 'Pepperoni, sausage, Canadian bacon, black olives, bell peppers, mushrooms, onions, and mozzarella.', 16.99, 0, NULL, 1
+INSERT INTO menu_items (category_id, item_name, description, photo_path, base_price, is_special, special_price, is_active)
+SELECT category_id, 'Operation Supreme', 'Pepperoni, sausage, Canadian bacon, black olives, bell peppers, mushrooms, onions, and mozzarella.', 'supreme.jpg', 16.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'pizzas'
 UNION ALL
-SELECT category_id, 'Margherita Classic', 'Fresh basil, tomato sauce, and mozzarella on hand-tossed dough.', 14.49, 0, NULL, 1
+SELECT category_id, 'Margherita Classic', 'Fresh basil, tomato sauce, and mozzarella on hand-tossed dough.', 'margherita.jpg', 14.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'pizzas'
 UNION ALL
-SELECT category_id, 'Caprese Delight', 'Basil Pesto sauce, roasted tomatoes, fresh mozzarella, and drizzled balsamic glaze on hand-tossed dough.', 14.49, 0, NULL, 1
+SELECT category_id, 'Caprese Delight', 'Basil Pesto sauce, roasted tomatoes, fresh mozzarella, and drizzled balsamic glaze on hand-tossed dough.', 'caprese.png', 14.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'pizzas'
 UNION ALL
-SELECT category_id, 'Sicilian Special', 'Pepperoni, salami, Italian sausage, tomato sauce, and mozzarella on hand-tossed dough.', 14.49, 0, NULL, 1
+SELECT category_id, 'Sicilian Special', 'Pepperoni, salami, Italian sausage, tomato sauce, and mozzarella on hand-tossed dough.', 'sicilian.jpg', 14.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'pizzas'
 UNION ALL
-SELECT category_id, 'Veggie Supreme', 'Black olives, bell peppers, mushrooms, onions, diced tomatoes, tomato sauce, and mozzarella on hand-tossed dough.', 14.49, 0, NULL, 1
+SELECT category_id, 'Veggie Supreme', 'Black olives, bell peppers, mushrooms, onions, diced tomatoes, tomato sauce, and mozzarella on hand-tossed dough.', 'veggie.jpg', 14.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'pizzas'
 UNION ALL
-SELECT category_id, 'Vegan Veggie', 'Black olives, bell peppers, mushrooms, onions, diced tomatoes, tomato sauce, and vegan cheese on cauliflower crust.', 14.49, 0, NULL, 1
+SELECT category_id, 'Vegan Veggie', 'Black olives, bell peppers, mushrooms, onions, diced tomatoes, tomato sauce, and vegan cheese on cauliflower crust.', 'ewwww.jpg', 14.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'pizzas';
 
-INSERT INTO menu_items (category_id, item_name, description, base_price, is_special, special_price, is_active)
-SELECT category_id, 'Traditional Wings', 'Ten crispy wings tossed in your choice of sauce.  Every 5 wings comes with option to choose another sauce and dip.', 12.99, 0, NULL, 1
+INSERT INTO menu_items (category_id, item_name, description, photo_path, base_price, is_special, special_price, is_active)
+SELECT category_id, 'Traditional Wings', 'Ten crispy wings tossed in your choice of sauce.  Every 5 wings comes with option to choose another sauce and dip.', 'traditional.jpg', 12.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'wings'
 UNION ALL
-SELECT category_id, 'Boneless Wings', 'Ten crispy boneless wings tossed in your choice of sauce.  Every 5 wings comes with option to choose another sauce and dip.', 13.49, 0, NULL, 1
+SELECT category_id, 'Boneless Wings', 'Ten crispy boneless wings tossed in your choice of sauce.  Every 5 wings comes with option to choose another sauce and dip.', 'boneless.jpg', 13.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'wings';
 
-INSERT INTO menu_items (category_id, item_name, description, base_price, is_special, special_price, is_active)
-SELECT category_id, 'Garden House Salad', 'Crisp romaine, cherry tomatoes, cucumbers, croutons, and parmesan with herb vinaigrette.', 8.99, 0, NULL, 1
+INSERT INTO menu_items (category_id, item_name, description, photo_path, base_price, is_special, special_price, is_active)
+SELECT category_id, 'Garden House Salad', 'Crisp romaine, cherry tomatoes, cucumbers, croutons, and parmesan with herb vinaigrette.', 'garden.jpg', 8.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'salads'
 UNION ALL
-SELECT category_id, 'Chicken Caesar', 'Grilled chicken, shaved parmesan, garlic croutons, and classic Caesar dressing.', 10.99, 0, NULL, 1
+SELECT category_id, 'Chicken Caesar', 'Grilled chicken, shaved parmesan, garlic croutons, and classic Caesar dressing.', 'caesar.jpg', 10.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'salads';
 
-INSERT INTO menu_items (category_id, item_name, description, base_price, is_special, special_price, is_active)
-SELECT category_id, 'Cinnamon Bread Bites', 'Warm baked bites glazed with cinnamon sugar and vanilla icing.', 6.99, 0, NULL, 1
+INSERT INTO menu_items (category_id, item_name, description, photo_path, base_price, is_special, special_price, is_active)
+SELECT category_id, 'Cinnamon Bread Bites', 'Warm baked bites glazed with cinnamon sugar and vanilla icing.', 'cinnamonbread.jpg', 6.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'desserts'
 UNION ALL
-SELECT category_id, 'Chocolate Lava Cake', 'Rich chocolate cake with a molten center and powdered sugar finish.', 7.49, 0, NULL, 1
+SELECT category_id, 'Chocolate Lava Cake', 'Rich chocolate cake with a molten center and powdered sugar finish.', 'lavacake.jpg', 7.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'desserts';
 
-INSERT INTO menu_items (category_id, item_name, description, base_price, is_special, special_price, is_active)
-SELECT category_id, 'Sparkling Citrus Soda', '2L  bottle', 2.99, 0, NULL, 1
+INSERT INTO menu_items (category_id, item_name, description, photo_path, base_price, is_special, special_price, is_active)
+SELECT category_id, 'Sparkling Citrus Soda', '2L  bottle', 'sparklingSoda.png', 2.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'beverages'
 UNION ALL
-SELECT category_id, 'Sweet Tea', '1 gal jug', 2.49, 0, NULL, 1
+SELECT category_id, 'Sweet Tea', '1 gal jug', 'sweetTea.jpg', 2.49, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'beverages'
 UNION ALL
-SELECT category_id, 'Coke Classic', '2L  bottle', 2.99, 0, NULL, 1
+SELECT category_id, 'Coke Classic', '2L  bottle', 'coke.jpg', 2.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'beverages'
 UNION ALL
-SELECT category_id, 'Diet Coke', '2L bottle', 2.99, 0, NULL, 1
+SELECT category_id, 'Diet Coke', '2L bottle', 'dietcoke.jpg', 2.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'beverages'
 UNION ALL
-SELECT category_id, 'Dr Pepper', '2L bottle', 2.99, 0, NULL, 1
+SELECT category_id, 'Dr Pepper', '2L bottle', 'drpepper.jpg', 2.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'beverages'
 UNION ALL
-SELECT category_id, 'Big Red', '2L bottle', 2.99, 0, NULL, 1
+SELECT category_id, 'Big Red', '2L bottle', 'bigred.jpg', 2.99, 0, NULL, 1
 FROM menu_categories
 WHERE slug = 'beverages';
+
+INSERT INTO ingredients (ingredient_name, is_active)
+VALUES
+  ('Tomato Sauce', 1),
+  ('Basil Pesto', 1),
+  ('Mozzarella Cheese', 1),
+  ('Fresh Mozzarella', 1),
+  ('Vegan Cheese', 1),
+  ('Pepperoni', 1),
+  ('Italian Sausage', 1),
+  ('Canadian Bacon', 1),
+  ('Salami', 1),
+  ('Black Olives', 1),
+  ('Bell Peppers', 1),
+  ('Mushrooms', 1),
+  ('Onions', 1),
+  ('Diced Tomatoes', 1),
+  ('Fresh Basil', 1),
+  ('Balsamic Glaze', 1),
+  ('Romaine Lettuce', 1),
+  ('Cherry Tomatoes', 1),
+  ('Cucumbers', 1),
+  ('Croutons', 1),
+  ('Parmesan', 1),
+  ('Herb Vinaigrette', 1),
+  ('Caesar Dressing', 1),
+  ('Chicken', 1),
+  ('Buffalo Sauce', 1),
+  ('BBQ Sauce', 1),
+  ('Ranch Dip', 1),
+  ('Blue Cheese Dip', 1),
+  ('Beverage Syrup', 1),
+  ('Dessert Mix', 1);
+
+INSERT INTO category_ingredients (category_id, ingredient_id)
+SELECT c.category_id, i.ingredient_id
+FROM menu_categories c
+JOIN ingredients i ON i.ingredient_name IN ('Buffalo Sauce', 'Ranch Dip', 'Blue Cheese Dip', 'Beverage Syrup')
+WHERE c.slug = 'specials'
+UNION ALL
+SELECT c.category_id, i.ingredient_id
+FROM menu_categories c
+JOIN ingredients i ON i.ingredient_name IN ('Tomato Sauce', 'Basil Pesto', 'Mozzarella Cheese', 'Fresh Mozzarella', 'Vegan Cheese', 'Pepperoni', 'Italian Sausage', 'Canadian Bacon', 'Salami', 'Black Olives', 'Bell Peppers', 'Mushrooms', 'Onions', 'Diced Tomatoes', 'Fresh Basil', 'Balsamic Glaze')
+WHERE c.slug = 'pizzas'
+UNION ALL
+SELECT c.category_id, i.ingredient_id
+FROM menu_categories c
+JOIN ingredients i ON i.ingredient_name IN ('Chicken', 'Buffalo Sauce', 'BBQ Sauce', 'Ranch Dip', 'Blue Cheese Dip')
+WHERE c.slug = 'wings'
+UNION ALL
+SELECT c.category_id, i.ingredient_id
+FROM menu_categories c
+JOIN ingredients i ON i.ingredient_name IN ('Romaine Lettuce', 'Cherry Tomatoes', 'Cucumbers', 'Croutons', 'Parmesan', 'Herb Vinaigrette', 'Caesar Dressing', 'Chicken')
+WHERE c.slug = 'salads'
+UNION ALL
+SELECT c.category_id, i.ingredient_id
+FROM menu_categories c
+JOIN ingredients i ON i.ingredient_name IN ('Dessert Mix')
+WHERE c.slug = 'desserts'
+UNION ALL
+SELECT c.category_id, i.ingredient_id
+FROM menu_categories c
+JOIN ingredients i ON i.ingredient_name IN ('Beverage Syrup')
+WHERE c.slug = 'beverages';
+
+INSERT INTO menu_item_ingredients (menu_item_id, ingredient_id)
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Tomato Sauce'
+WHERE m.item_name IN ('Operation Supreme', 'Margherita Classic', 'Sicilian Special', 'Veggie Supreme', 'Vegan Veggie')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Basil Pesto'
+WHERE m.item_name = 'Caprese Delight'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Mozzarella Cheese'
+WHERE m.item_name IN ('Operation Supreme', 'Margherita Classic', 'Sicilian Special', 'Veggie Supreme')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Fresh Mozzarella'
+WHERE m.item_name = 'Caprese Delight'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Vegan Cheese'
+WHERE m.item_name = 'Vegan Veggie'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Pepperoni'
+WHERE m.item_name IN ('Operation Supreme', 'Sicilian Special')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Italian Sausage'
+WHERE m.item_name IN ('Operation Supreme', 'Sicilian Special')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Canadian Bacon'
+WHERE m.item_name = 'Operation Supreme'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Salami'
+WHERE m.item_name = 'Sicilian Special'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Black Olives'
+WHERE m.item_name IN ('Operation Supreme', 'Veggie Supreme', 'Vegan Veggie')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Bell Peppers'
+WHERE m.item_name IN ('Operation Supreme', 'Veggie Supreme', 'Vegan Veggie')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Mushrooms'
+WHERE m.item_name IN ('Operation Supreme', 'Veggie Supreme', 'Vegan Veggie')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Onions'
+WHERE m.item_name IN ('Operation Supreme', 'Veggie Supreme', 'Vegan Veggie')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Diced Tomatoes'
+WHERE m.item_name IN ('Caprese Delight', 'Veggie Supreme', 'Vegan Veggie')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Fresh Basil'
+WHERE m.item_name = 'Margherita Classic'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Balsamic Glaze'
+WHERE m.item_name = 'Caprese Delight'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Romaine Lettuce'
+WHERE m.item_name IN ('Garden House Salad', 'Chicken Caesar')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Cherry Tomatoes'
+WHERE m.item_name = 'Garden House Salad'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Cucumbers'
+WHERE m.item_name = 'Garden House Salad'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Croutons'
+WHERE m.item_name IN ('Garden House Salad', 'Chicken Caesar')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Parmesan'
+WHERE m.item_name IN ('Garden House Salad', 'Chicken Caesar')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Herb Vinaigrette'
+WHERE m.item_name = 'Garden House Salad'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Caesar Dressing'
+WHERE m.item_name = 'Chicken Caesar'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Chicken'
+WHERE m.item_name IN ('Chicken Caesar', 'Traditional Wings', 'Boneless Wings')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Buffalo Sauce'
+WHERE m.item_name IN ('Traditional Wings', 'Combo Deal')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'BBQ Sauce'
+WHERE m.item_name = 'Boneless Wings'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Ranch Dip'
+WHERE m.item_name IN ('Traditional Wings', 'Boneless Wings', 'Combo Deal')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Blue Cheese Dip'
+WHERE m.item_name IN ('Traditional Wings', 'Boneless Wings')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Beverage Syrup'
+WHERE m.item_name IN ('Daily Lunch Special', 'Sparkling Citrus Soda', 'Sweet Tea', 'Coke Classic', 'Diet Coke', 'Dr Pepper', 'Big Red')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Dessert Mix'
+WHERE m.item_name IN ('Cinnamon Bread Bites', 'Chocolate Lava Cake');
 
 INSERT INTO customers (email, first_name, last_name, phone, loyalty_points, marketing_opt_in, last_login_at)
 VALUES

@@ -6,10 +6,14 @@ import MenuItem from '@mui/material/MenuItem';
 function NavMenu({
   isMenuOpen,
   menuAnchorEl,
+  menuSections,
   isSignedIn,
+  accountType,
+  canAccessAdminMenu,
   onOpen,
   onClose,
   onViewProfile,
+  onOpenAdmin,
   onSignOut,
 }) {
   return (
@@ -43,13 +47,23 @@ function NavMenu({
           horizontal: 'right',
         }}
       >
-        <MenuItem component="a" href="#specials" onClick={onClose}>Specials</MenuItem>
-        <MenuItem component="a" href="#pizzas" onClick={onClose}>Pizzas</MenuItem>
-        <MenuItem component="a" href="#salads" onClick={onClose}>Salads</MenuItem>
-        <MenuItem component="a" href="#wings" onClick={onClose}>Wings</MenuItem>
-        <MenuItem component="a" href="#beverages" onClick={onClose}>Beverages</MenuItem>
-        <MenuItem component="a" href="#desserts" onClick={onClose}>Desserts</MenuItem>
-        {isSignedIn && (
+        {(menuSections || []).map((section) => (
+          <MenuItem key={section.id} component="a" href={`#${section.id}`} onClick={onClose}>
+            {section.title}
+          </MenuItem>
+        ))}
+        {isSignedIn && accountType === 'employee' && (
+          <>
+            <MenuItem
+              onClick={canAccessAdminMenu ? onOpenAdmin : undefined}
+              disabled={!canAccessAdminMenu}
+            >
+              Admin
+            </MenuItem>
+            <MenuItem onClick={onSignOut}>Sign Out</MenuItem>
+          </>
+        )}
+        {isSignedIn && accountType !== 'employee' && (
           <>
             <MenuItem onClick={onViewProfile}>View Profile</MenuItem>
             <MenuItem onClick={onSignOut}>Sign Out</MenuItem>

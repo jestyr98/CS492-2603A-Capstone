@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS menu_items (
   category_id INTEGER NOT NULL,
   item_name TEXT NOT NULL,
   description TEXT NOT NULL,
+  photo_path TEXT,
   base_price REAL NOT NULL CHECK (base_price >= 0),
   is_special INTEGER NOT NULL DEFAULT 0 CHECK (is_special IN (0, 1)),
   special_price REAL CHECK (special_price IS NULL OR special_price >= 0),
@@ -65,6 +66,42 @@ CREATE INDEX IF NOT EXISTS idx_menu_items_active
 
 CREATE INDEX IF NOT EXISTS idx_menu_items_is_special
   ON menu_items(is_special);
+
+-- Ingredient catalog used for menu customization options.
+CREATE TABLE IF NOT EXISTS ingredients (
+  ingredient_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ingredient_name TEXT NOT NULL UNIQUE,
+  is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Cross-reference between menu category (pizza/salad/etc.) and allowed ingredients.
+CREATE TABLE IF NOT EXISTS category_ingredients (
+  category_id INTEGER NOT NULL,
+  ingredient_id INTEGER NOT NULL,
+  PRIMARY KEY (category_id, ingredient_id),
+  FOREIGN KEY (category_id) REFERENCES menu_categories(category_id) ON DELETE CASCADE,
+  FOREIGN KEY (ingredient_id) REFERENCES ingredients(ingredient_id) ON DELETE CASCADE
+);
+
+-- Many-to-many mapping between menu items and selectable ingredients.
+CREATE TABLE IF NOT EXISTS menu_item_ingredients (
+  menu_item_id INTEGER NOT NULL,
+  ingredient_id INTEGER NOT NULL,
+  PRIMARY KEY (menu_item_id, ingredient_id),
+  FOREIGN KEY (menu_item_id) REFERENCES menu_items(menu_item_id) ON DELETE CASCADE,
+  FOREIGN KEY (ingredient_id) REFERENCES ingredients(ingredient_id) ON DELETE RESTRICT
+);
+
+CREATE INDEX IF NOT EXISTS idx_ingredients_active
+  ON ingredients(is_active);
+
+CREATE INDEX IF NOT EXISTS idx_category_ingredients_category_id
+  ON category_ingredients(category_id);
+
+CREATE INDEX IF NOT EXISTS idx_menu_item_ingredients_ingredient_id
+  ON menu_item_ingredients(ingredient_id);
 
 CREATE INDEX IF NOT EXISTS idx_employee_credentials_locked_until
   ON employee_credentials(locked_until);
@@ -215,6 +252,13 @@ AFTER UPDATE ON menu_items
 FOR EACH ROW
 BEGIN
   UPDATE menu_items SET updated_at = CURRENT_TIMESTAMP WHERE menu_item_id = OLD.menu_item_id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_ingredients_updated_at
+AFTER UPDATE ON ingredients
+FOR EACH ROW
+BEGIN
+  UPDATE ingredients SET updated_at = CURRENT_TIMESTAMP WHERE ingredient_id = OLD.ingredient_id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS trg_customers_updated_at
