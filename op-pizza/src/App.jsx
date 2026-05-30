@@ -4,27 +4,62 @@ import logo from './assets/logo.svg'
 import XIcon from '@mui/icons-material/X';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import InstagramIcon from '@mui/icons-material/Instagram';
-import MenuIcon from '@mui/icons-material/Menu';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
+import NavMenu from './NavMenu'
+import CartIcon from './Cart'
 import menuSections from './Menu/MenuSection'
-import signIn from './Login/login'
+import ProfileModal from './Modals/ProfileModal'
+import SignInModal from './Modals/SignInModal'
+import CartModal from './Modals/CartModal'
 
 function App() {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
+
+  const [showLogin, setShowLogin] = useState(false)
+  const [isSignedIn, setIsSignedIn] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+
+  const [cartItems, setCartItems] = useState([])
+  const [showCart, setShowCart] = useState(false)
+
+  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
+
+  const addToCart = (item) => {
+    setCartItems((prev) => {
+      const existing = prev.find((i) => i.name === item.name)
+      if (existing) {
+        return prev.map((i) =>
+          i.name === item.name ? { ...i, quantity: i.quantity + 1 } : i
+        )
+      }
+      return [...prev, { ...item, quantity: 1 }]
+    })
+  }
+
+  const removeFromCart = (name) => {
+    setCartItems((prev) => prev.filter((i) => i.name !== name))
+  }
+
+  const updateQuantity = (name, quantity) => {
+    if (quantity < 1) return
+    setCartItems((prev) =>
+      prev.map((i) => (i.name === name ? { ...i, quantity } : i))
+    )
+  }
+
   const isMenuOpen = Boolean(menuAnchorEl)
 
   const openMenu = (event) => {
     setMenuAnchorEl(event.currentTarget)
   }
+
   const closeMenu = () => {
     setMenuAnchorEl(null)
-  }
-
-  const [loginAnchorEl, setLoginAnchorEl] = useState(null)
-  const openLogin = (event) => {
-    setLoginAnchorEL(event.currentTarget)
   }
 
   return (
@@ -39,44 +74,29 @@ function App() {
           <nav className="header_nav">
             <a href="#specials" className="header_link" onClick={closeMenu}>Specials</a>
             <a href="#contact" className="header_link" onClick={closeMenu}>Contact</a>
-            <a href="#signIn" className="header_link" onClick={openLogin}>Sign In</a>
-
-            <IconButton
-              id="category-menu-button"
-              className="menu-toggle"
-              aria-label="Toggle menu categories"
-              aria-controls={isMenuOpen ? 'category-menu' : undefined}
-              aria-haspopup="true"
-              aria-expanded={isMenuOpen}
-              onClick={openMenu}
+            <a
+              href="#signin"
+              className="header_link"
+              onClick={(event) => {
+                event.preventDefault()
+                closeMenu()
+                setShowLogin(true)
+              }}
             >
-              <MenuIcon />
-            </IconButton>
+                {isSignedIn ? email : 'Sign In'}
+          </a>
 
-            <Menu
-              id="category-menu"
-              anchorEl={menuAnchorEl}
-              open={isMenuOpen}
+            <CartIcon itemCount={cartItemCount} onClick={() => setShowCart(true)} />
+
+            <NavMenu
+              isMenuOpen={isMenuOpen}
+              menuAnchorEl={menuAnchorEl}
+              isSignedIn={isSignedIn}
+              onOpen={openMenu}
               onClose={closeMenu}
-              MenuListProps={{
-                'aria-labelledby': 'category-menu-button',
-              }}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-            >
-              <MenuItem component="a" href="#specials" onClick={closeMenu}>Specials</MenuItem>
-              <MenuItem component="a" href="#pizzas" onClick={closeMenu}>Pizzas</MenuItem>
-              <MenuItem component="a" href="#salads" onClick={closeMenu}>Salads</MenuItem>
-              <MenuItem component="a" href="#wings" onClick={closeMenu}>Wings</MenuItem>
-              <MenuItem component="a" href="#beverages" onClick={closeMenu}>Beverages</MenuItem>
-              <MenuItem component="a" href="#desserts" onClick={closeMenu}>Desserts</MenuItem>
-            </Menu>
+              onViewProfile={() => { setShowProfile(true); closeMenu(); }}
+              onSignOut={() => { setIsSignedIn(false); setEmail(''); setPassword(''); setName(''); setPhone(''); closeMenu(); }}
+            />
           </nav>
         </div>
       </header>
@@ -121,6 +141,7 @@ function App() {
                       <h4>{item.name}</h4>
                       <p>{item.description}</p>
                       <p className="menu-card_price">{item.price}</p>
+                      <button onClick={() => addToCart(item)}>Add to Cart</button>
                     </div>
                   </article>
                 ))}
@@ -128,6 +149,10 @@ function App() {
             </section>
           ))}
         </section>
+
+
+
+
 
         <section className="hero-primary container" id="contact">
           <article className="hero-card hero-card--contact">
@@ -150,6 +175,53 @@ function App() {
         </section>
 
       </main>
+      {showLogin && (
+        <SignInModal
+          email={email}
+          password={password}
+          loginError={loginError}
+          onEmailChange={setEmail}
+          onPasswordChange={setPassword}
+          onLogin={() => {
+            if (email === 'customer@example.com' && password === 'pizza123') {
+              setIsSignedIn(true)
+              setShowLogin(false)
+              setLoginError('')
+
+              setTimeout(() => {
+                document
+                  .getElementById('customer-profile')
+                  ?.scrollIntoView({ behavior: 'smooth' })
+              }, 100)
+            } else {
+              setLoginError('Invalid email or password.')
+            }
+          }}
+          onForgotPassword={() => alert('Password reset link sent to your email.')}
+          onClose={() => setShowLogin(false)}
+        />
+      )}
+
+      {showProfile && (
+        <ProfileModal
+          email={email}
+          name={name}
+          phone={phone}
+          onClose={() => setShowProfile(false)}
+          onEmailChange={setEmail}
+          onNameChange={setName}
+          onPhoneChange={setPhone}
+        />
+      )}
+
+      {showCart && (
+        <CartModal
+          cartItems={cartItems}
+          onClose={() => setShowCart(false)}
+          onRemove={removeFromCart}
+          onUpdateQuantity={updateQuantity}
+        />
+      )}
     </>
   )
 }

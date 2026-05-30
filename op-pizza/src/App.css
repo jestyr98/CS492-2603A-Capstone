@@ -247,3 +247,53 @@ a {
     padding: 0.45rem 0.7rem;
   }
 }
+.login-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.login-box {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-box h2 {
+  color: #222;
+}
+
+.login-box input {
+  padding: 10px;
+  font-size: 16px;
+}
+
+.login-box button {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.forgot-password {
+  text-align: center;
+  color: #c62828;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+.login-error {
+  color: #c62828;
+  font-size: 14px;
+  text-align: center;
+}
