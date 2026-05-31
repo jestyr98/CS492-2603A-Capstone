@@ -78,6 +78,21 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
     return `$${Number(amount).toFixed(2)}`;
   }
 
+  function buildPizzaSizePrices(originalLargePrice) {
+    const baseLarge = Number(originalLargePrice);
+    const safeLarge = Number.isFinite(baseLarge) ? baseLarge : 16.99;
+
+    const adjustedLarge = Math.max(0, safeLarge);
+    const adjustedMedium = Math.max(0, safeLarge - 3);
+    const adjustedPersonal = Math.max(0, safeLarge - 6);
+
+    return {
+      Personal: Number(adjustedPersonal.toFixed(2)),
+      Medium: Number(adjustedMedium.toFixed(2)),
+      Large: Number(adjustedLarge.toFixed(2)),
+    };
+  }
+
   function loadDevCredentialsFromSecrets() {
     if (!fs.existsSync(APP_DEV_SECRETS_PATH)) {
       return [];
@@ -267,6 +282,50 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
     );
   }
 
+  async function ensureSecurityTables(db) {
+    await dbRun(
+      db,
+      `
+        CREATE TABLE IF NOT EXISTS account_mfa_methods (
+          account_type TEXT NOT NULL CHECK (account_type IN ('customer', 'employee')),
+          account_id INTEGER NOT NULL,
+          method TEXT NOT NULL CHECK (method IN ('email', 'sms')),
+          destination TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (account_type, account_id, method)
+        );
+      `
+    );
+
+    await dbRun(
+      db,
+      `
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+          token_id INTEGER PRIMARY KEY AUTOINCREMENT,
+          account_type TEXT NOT NULL CHECK (account_type IN ('customer', 'employee')),
+          account_id INTEGER NOT NULL,
+          token_hash TEXT NOT NULL UNIQUE,
+          expires_at TEXT NOT NULL,
+          used_at TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+      `
+    );
+
+    await dbRun(
+      db,
+      `
+        CREATE TABLE IF NOT EXISTS login_attempt_audit (
+          attempt_id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT NOT NULL,
+          ip_address TEXT,
+          status TEXT NOT NULL CHECK (status IN ('success', 'failure')),
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+      `
+    );
+  }
+
   async function seedIngredients(db) {
     const ingredientNames = [
       'Tomato Sauce',
@@ -295,8 +354,13 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
       'Chicken',
       'Buffalo Sauce',
       'BBQ Sauce',
+      'Garlic Parmesan Sauce',
+      'Mango Habanero Sauce',
+      'Sweet Chili Sauce',
       'Ranch Dip',
       'Blue Cheese Dip',
+      'Honey Mustard Dip',
+      'Chipotle Ranch Dip',
       'Beverage Syrup',
       'Dessert Mix',
     ];
@@ -319,8 +383,8 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
     const categoryIngredientLinks = [
       ['specials', ['Buffalo Sauce', 'Ranch Dip', 'Blue Cheese Dip', 'Beverage Syrup']],
       ['pizzas', ['Tomato Sauce', 'Basil Pesto', 'Mozzarella Cheese', 'Fresh Mozzarella', 'Vegan Cheese', 'Pepperoni', 'Italian Sausage', 'Canadian Bacon', 'Salami', 'Black Olives', 'Bell Peppers', 'Mushrooms', 'Onions', 'Diced Tomatoes', 'Fresh Basil', 'Balsamic Glaze']],
-      ['wings', ['Chicken', 'Buffalo Sauce', 'BBQ Sauce', 'Ranch Dip', 'Blue Cheese Dip']],
-      ['salads', ['Romaine Lettuce', 'Cherry Tomatoes', 'Cucumbers', 'Croutons', 'Parmesan', 'Herb Vinaigrette', 'Caesar Dressing', 'Chicken']],
+      ['wings', ['Chicken', 'Buffalo Sauce', 'BBQ Sauce', 'Garlic Parmesan Sauce', 'Mango Habanero Sauce', 'Sweet Chili Sauce', 'Ranch Dip', 'Blue Cheese Dip', 'Honey Mustard Dip', 'Chipotle Ranch Dip']],
+      ['salads', ['Romaine Lettuce', 'Cherry Tomatoes', 'Cucumbers', 'Croutons', 'Parmesan', 'Herb Vinaigrette', 'Caesar Dressing', 'Ranch Dip', 'Blue Cheese Dip', 'Chicken']],
       ['desserts', ['Dessert Mix']],
       ['beverages', ['Beverage Syrup']],
     ];
@@ -359,8 +423,8 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
       ['Sicilian Special', ['Tomato Sauce', 'Mozzarella Cheese', 'Pepperoni', 'Salami', 'Italian Sausage']],
       ['Veggie Supreme', ['Tomato Sauce', 'Mozzarella Cheese', 'Black Olives', 'Bell Peppers', 'Mushrooms', 'Onions', 'Diced Tomatoes']],
       ['Vegan Veggie', ['Tomato Sauce', 'Vegan Cheese', 'Black Olives', 'Bell Peppers', 'Mushrooms', 'Onions', 'Diced Tomatoes']],
-      ['Traditional Wings', ['Chicken', 'Buffalo Sauce', 'Ranch Dip', 'Blue Cheese Dip']],
-      ['Boneless Wings', ['Chicken', 'BBQ Sauce', 'Ranch Dip', 'Blue Cheese Dip']],
+      ['Traditional Wings', ['Chicken', 'Buffalo Sauce', 'Garlic Parmesan Sauce', 'Sweet Chili Sauce', 'Ranch Dip', 'Blue Cheese Dip', 'Honey Mustard Dip', 'Chipotle Ranch Dip']],
+      ['Boneless Wings', ['Chicken', 'BBQ Sauce', 'Mango Habanero Sauce', 'Sweet Chili Sauce', 'Ranch Dip', 'Blue Cheese Dip', 'Honey Mustard Dip', 'Chipotle Ranch Dip']],
       ['Garden House Salad', ['Romaine Lettuce', 'Cherry Tomatoes', 'Cucumbers', 'Croutons', 'Parmesan', 'Herb Vinaigrette']],
       ['Chicken Caesar', ['Romaine Lettuce', 'Chicken', 'Parmesan', 'Croutons', 'Caesar Dressing']],
       ['Cinnamon Bread Bites', ['Dessert Mix']],
@@ -440,6 +504,7 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
     if (!shouldBootstrap) {
       await ensureMenuPhotoColumn(db);
       await ensureIngredientTables(db);
+      await ensureSecurityTables(db);
       await seedIngredients(db);
       await seedCategoryIngredients(db);
       await seedMenuItemIngredients(db);
@@ -463,6 +528,7 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
 
     await ensureMenuPhotoColumn(db);
     await ensureIngredientTables(db);
+    await ensureSecurityTables(db);
     await seedIngredients(db);
     await seedCategoryIngredients(db);
     await seedMenuItemIngredients(db);
@@ -494,6 +560,173 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
       ORDER BY c.sort_order ASC, m.item_name ASC;
     `;
 
+    const itemIngredientsQuery = `
+      SELECT
+        mi.menu_item_id,
+        i.ingredient_name
+      FROM menu_item_ingredients mi
+      JOIN ingredients i ON i.ingredient_id = mi.ingredient_id
+      WHERE i.is_active = 1
+      ORDER BY i.ingredient_name ASC;
+    `;
+
+    const categoryIngredientsQuery = `
+      SELECT
+        c.slug AS section_id,
+        i.ingredient_name
+      FROM category_ingredients ci
+      JOIN menu_categories c ON c.category_id = ci.category_id
+      JOIN ingredients i ON i.ingredient_id = ci.ingredient_id
+      WHERE c.is_active = 1
+        AND i.is_active = 1
+      ORDER BY c.sort_order ASC, i.ingredient_name ASC;
+    `;
+
+    const buildOptions = ({ sectionId, itemName, itemIngredients, categoryIngredients, itemNamesBySectionId, ingredientsBySectionId }) => {
+      const sauceOptions = categoryIngredients.filter((name) => /sauce|pesto/i.test(name));
+      const dipOptions = categoryIngredients.filter((name) => /dip/i.test(name));
+      const dressingOptions = categoryIngredients.filter((name) => /dressing|vinaigrette|ranch|blue cheese/i.test(name));
+      const nonFlavorIngredientOptions = itemIngredients.filter(
+        (name) => !/sauce|pesto|dip|dressing|vinaigrette/i.test(name)
+      );
+
+      const options = {};
+
+      if (sectionId === 'pizzas') {
+        if (nonFlavorIngredientOptions.length > 0) {
+          options.removeIngredients = nonFlavorIngredientOptions;
+        }
+
+        if (sauceOptions.length > 0) {
+          options.sauceOne = sauceOptions;
+        }
+      }
+
+      if (sectionId === 'wings') {
+        if (sauceOptions.length > 0) {
+          options.wingCoatingSauces = sauceOptions;
+        }
+
+        if (dipOptions.length > 0) {
+          options.wingDipSauces = dipOptions;
+        }
+
+        options.wingOrderUnit = 10;
+      }
+
+      if (sectionId === 'salads') {
+        if (dressingOptions.length > 0) {
+          options.dressing = dressingOptions;
+        }
+
+        if (nonFlavorIngredientOptions.length > 0) {
+          options.removeIngredients = nonFlavorIngredientOptions;
+        }
+      }
+
+      if (sectionId === 'specials') {
+        const pizzaChoices = itemNamesBySectionId.get('pizzas') || [];
+        const wingChoices = itemNamesBySectionId.get('wings') || [];
+        const beverageChoices = itemNamesBySectionId.get('beverages') || [];
+        const pizzaCategoryIngredients = ingredientsBySectionId.get('pizzas') || [];
+        const pizzaToppings = pizzaCategoryIngredients.filter(
+          (name) => !/sauce|pesto|dip|dressing|vinaigrette/i.test(name)
+        );
+
+        if (itemName === 'Daily Lunch Special') {
+          if (beverageChoices.length > 0) {
+            options.drink = beverageChoices;
+          }
+
+          if (pizzaToppings.length > 0) {
+            options.sliceOneIngredients = pizzaToppings;
+            options.sliceTwoIngredients = pizzaToppings;
+            options.includedToppingsCount = 2;
+            options.extraToppingPrice = 1.0;
+          }
+        }
+
+        if (itemName === 'Combo Deal') {
+          const comboPizzaChoices = Array.from(new Set([...pizzaChoices, 'Build Your Own Pizza']));
+          const wingCategoryIngredients = ingredientsBySectionId.get('wings') || [];
+          const wingCoatingSauceOptions = wingCategoryIngredients.filter((name) => /sauce|pesto/i.test(name));
+          const wingDipSauceOptions = wingCategoryIngredients.filter((name) => /dip/i.test(name));
+          const pizzaSauceOptions = pizzaCategoryIngredients.filter((name) => /sauce|pesto/i.test(name));
+
+          if (comboPizzaChoices.length > 0) {
+            options.pizzaChoice = comboPizzaChoices;
+          }
+
+          if (wingChoices.length > 0) {
+            options.wingChoice = wingChoices;
+          }
+
+          if (beverageChoices.length > 0) {
+            options.beverageChoice = beverageChoices;
+          }
+
+          if (pizzaSauceOptions.length > 0) {
+            options.comboPizzaSauces = pizzaSauceOptions;
+          }
+
+          if (pizzaToppings.length > 0) {
+            options.comboPizzaToppings = pizzaToppings;
+          }
+
+          options.comboPizzaSizes = ['Personal', 'Medium', 'Large'];
+
+          if (wingCoatingSauceOptions.length > 0) {
+            options.comboWingCoatingSauces = wingCoatingSauceOptions;
+          }
+
+          if (wingDipSauceOptions.length > 0) {
+            options.comboWingDipSauces = wingDipSauceOptions;
+          }
+        }
+      }
+
+      return Object.keys(options).length > 0 ? options : undefined;
+    };
+
+    const buildYourOwnPizzaItem = (pizzaCategoryIngredients) => {
+      const sizeOptions = ['Personal', 'Medium', 'Large'];
+      const basePrice = {
+        Personal: 10.99,
+        Medium: 13.99,
+        Large: 16.99,
+      };
+
+      const sauceOptions = pizzaCategoryIngredients.filter((name) => /sauce|pesto/i.test(name));
+      const cheeseOptions = pizzaCategoryIngredients.filter((name) => /cheese|mozzarella/i.test(name));
+      const extraCandidates = pizzaCategoryIngredients.filter(
+        (name) => !/sauce|pesto|dip|dressing|vinaigrette/i.test(name)
+      );
+
+      const options = {
+        size: sizeOptions,
+        dough: ['Hand Tossed', 'Thin Crust', 'Cauliflower Crust'],
+        addExtras: extraCandidates.map((name) => ({ name, price: 1.0 })),
+      };
+
+      if (sauceOptions.length > 0) {
+        options.sauceOne = sauceOptions;
+      }
+
+      if (cheeseOptions.length > 0) {
+        options.cheese = cheeseOptions;
+      }
+
+      return {
+        id: 'virtual-build-your-own-pizza',
+        name: 'Build Your Own Pizza',
+        description: 'Start with crust and sauce, then pick your size and add the toppings you want.',
+        photoPath: null,
+        price: formatCurrency(basePrice.Large),
+        basePrice,
+        options,
+      };
+    };
+
     return new Promise((resolve, reject) => {
       db.all(menuQuery, (err, rows) => {
         if (err) {
@@ -501,33 +734,111 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
           return;
         }
 
-        const sectionsMap = new Map();
-        for (const row of rows) {
-          if (!sectionsMap.has(row.section_id)) {
-            sectionsMap.set(row.section_id, {
-              id: row.section_id,
-              title: row.section_title,
-              sortOrder: row.sort_order,
-              items: [],
-            });
+        db.all(itemIngredientsQuery, (itemIngredientErr, itemIngredientRows) => {
+          if (itemIngredientErr) {
+            reject(itemIngredientErr);
+            return;
           }
 
-          if (row.menu_item_id) {
-            sectionsMap.get(row.section_id).items.push({
-              id: row.menu_item_id,
-              name: row.item_name,
-              description: row.description,
-              photoPath: row.photo_path || null,
-              price: formatCurrency(row.display_price),
-            });
-          }
-        }
+          db.all(categoryIngredientsQuery, (categoryIngredientErr, categoryIngredientRows) => {
+            if (categoryIngredientErr) {
+              reject(categoryIngredientErr);
+              return;
+            }
 
-        const sections = Array.from(sectionsMap.values())
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map(({ sortOrder, ...section }) => section);
+            const ingredientsByItemId = new Map();
+            for (const ingredientRow of itemIngredientRows || []) {
+              const ingredientList = ingredientsByItemId.get(ingredientRow.menu_item_id) || [];
+              ingredientList.push(ingredientRow.ingredient_name);
+              ingredientsByItemId.set(ingredientRow.menu_item_id, ingredientList);
+            }
 
-        resolve(sections);
+            const ingredientsBySectionId = new Map();
+            for (const ingredientRow of categoryIngredientRows || []) {
+              const ingredientList = ingredientsBySectionId.get(ingredientRow.section_id) || [];
+              ingredientList.push(ingredientRow.ingredient_name);
+              ingredientsBySectionId.set(ingredientRow.section_id, ingredientList);
+            }
+
+            const itemNamesBySectionId = new Map();
+            for (const row of rows || []) {
+              if (!row.menu_item_id) {
+                continue;
+              }
+
+              const itemNames = itemNamesBySectionId.get(row.section_id) || [];
+              itemNames.push(row.item_name);
+              itemNamesBySectionId.set(row.section_id, itemNames);
+            }
+
+            const sectionsMap = new Map();
+            for (const row of rows) {
+              if (!sectionsMap.has(row.section_id)) {
+                sectionsMap.set(row.section_id, {
+                  id: row.section_id,
+                  title: row.section_title,
+                  sortOrder: row.sort_order,
+                  items: [],
+                });
+              }
+
+              if (row.menu_item_id) {
+                const itemIngredients = ingredientsByItemId.get(row.menu_item_id) || [];
+                const categoryIngredients = ingredientsBySectionId.get(row.section_id) || [];
+                const options = buildOptions({
+                  sectionId: row.section_id,
+                  itemName: row.item_name,
+                  itemIngredients,
+                  categoryIngredients,
+                  itemNamesBySectionId,
+                  ingredientsBySectionId,
+                });
+
+                const itemPayload = {
+                  id: row.menu_item_id,
+                  name: row.item_name,
+                  description: row.description,
+                  photoPath: row.photo_path || null,
+                  price: formatCurrency(row.display_price),
+                };
+
+                if (row.section_id === 'pizzas') {
+                  const pizzaBasePrice = buildPizzaSizePrices(row.display_price);
+                  const pizzaSizeOptions = ['Personal', 'Medium', 'Large'];
+
+                  itemPayload.basePrice = pizzaBasePrice;
+                  itemPayload.price = formatCurrency(pizzaBasePrice.Large);
+                  itemPayload.options = {
+                    ...(options || {}),
+                    size: pizzaSizeOptions,
+                  };
+                } else if (options) {
+                  itemPayload.options = options;
+                }
+
+                sectionsMap.get(row.section_id).items.push(itemPayload);
+              }
+            }
+
+            const sections = Array.from(sectionsMap.values())
+              .sort((a, b) => a.sortOrder - b.sortOrder)
+              .map(({ sortOrder, ...section }) => section);
+
+            const pizzasSection = sections.find((section) => section.id === 'pizzas');
+            if (pizzasSection) {
+              const hasBuildYourOwn = pizzasSection.items.some(
+                (item) => String(item.name || '').toLowerCase() === 'build your own pizza'
+              );
+
+              if (!hasBuildYourOwn) {
+                const pizzaCategoryIngredients = ingredientsBySectionId.get('pizzas') || [];
+                pizzasSection.items.push(buildYourOwnPizzaItem(pizzaCategoryIngredients));
+              }
+            }
+
+            resolve(sections);
+          });
+        });
       });
     });
   }

@@ -159,8 +159,13 @@ VALUES
   ('Chicken', 1),
   ('Buffalo Sauce', 1),
   ('BBQ Sauce', 1),
+  ('Garlic Parmesan Sauce', 1),
+  ('Mango Habanero Sauce', 1),
+  ('Sweet Chili Sauce', 1),
   ('Ranch Dip', 1),
   ('Blue Cheese Dip', 1),
+  ('Honey Mustard Dip', 1),
+  ('Chipotle Ranch Dip', 1),
   ('Beverage Syrup', 1),
   ('Dessert Mix', 1);
 
@@ -177,12 +182,12 @@ WHERE c.slug = 'pizzas'
 UNION ALL
 SELECT c.category_id, i.ingredient_id
 FROM menu_categories c
-JOIN ingredients i ON i.ingredient_name IN ('Chicken', 'Buffalo Sauce', 'BBQ Sauce', 'Ranch Dip', 'Blue Cheese Dip')
+JOIN ingredients i ON i.ingredient_name IN ('Chicken', 'Buffalo Sauce', 'BBQ Sauce', 'Garlic Parmesan Sauce', 'Mango Habanero Sauce', 'Sweet Chili Sauce', 'Ranch Dip', 'Blue Cheese Dip', 'Honey Mustard Dip', 'Chipotle Ranch Dip')
 WHERE c.slug = 'wings'
 UNION ALL
 SELECT c.category_id, i.ingredient_id
 FROM menu_categories c
-JOIN ingredients i ON i.ingredient_name IN ('Romaine Lettuce', 'Cherry Tomatoes', 'Cucumbers', 'Croutons', 'Parmesan', 'Herb Vinaigrette', 'Caesar Dressing', 'Chicken')
+JOIN ingredients i ON i.ingredient_name IN ('Romaine Lettuce', 'Cherry Tomatoes', 'Cucumbers', 'Croutons', 'Parmesan', 'Herb Vinaigrette', 'Caesar Dressing', 'Ranch Dip', 'Blue Cheese Dip', 'Chicken')
 WHERE c.slug = 'salads'
 UNION ALL
 SELECT c.category_id, i.ingredient_id
@@ -334,6 +339,31 @@ UNION ALL
 SELECT m.menu_item_id, i.ingredient_id
 FROM menu_items m
 JOIN ingredients i ON i.ingredient_name = 'Blue Cheese Dip'
+WHERE m.item_name IN ('Traditional Wings', 'Boneless Wings')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Garlic Parmesan Sauce'
+WHERE m.item_name = 'Traditional Wings'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Mango Habanero Sauce'
+WHERE m.item_name = 'Boneless Wings'
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Sweet Chili Sauce'
+WHERE m.item_name IN ('Traditional Wings', 'Boneless Wings')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Honey Mustard Dip'
+WHERE m.item_name IN ('Traditional Wings', 'Boneless Wings')
+UNION ALL
+SELECT m.menu_item_id, i.ingredient_id
+FROM menu_items m
+JOIN ingredients i ON i.ingredient_name = 'Chipotle Ranch Dip'
 WHERE m.item_name IN ('Traditional Wings', 'Boneless Wings')
 UNION ALL
 SELECT m.menu_item_id, i.ingredient_id

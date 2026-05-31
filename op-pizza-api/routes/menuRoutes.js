@@ -15,7 +15,14 @@ function registerMenuRoutes(app, deps) {
     dbGet,
     dbRun,
     adminMenuItemSchema,
+    adminMenuItemUpdateSchema,
+    orderSubmissionSchema,
+    sendOrderNotification,
   } = deps;
+
+  const makeOrderNumber = () => `OP-${Date.now()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+
+  const parsePrice = (priceLabel) => Number.parseFloat(String(priceLabel || '').replace(/[^0-9.]/g, '')) || 0;
 
   if (!fs.existsSync(APP_ASSETS_DIR)) {
     fs.mkdirSync(APP_ASSETS_DIR, { recursive: true });
@@ -293,6 +300,292 @@ function registerMenuRoutes(app, deps) {
         }
       }
       res.status(500).json({ error: 'Unable to remove menu item right now.' });
+    } finally {
+      if (db) {
+        db.close();
+      }
+    }
+  });
+
+  app.put('/api/admin/menu-items/:menuItemId', requireSecureTransport, requireSession, requireAdminMenuAccess, async (req, res) => {
+    const menuItemId = Number(req.params.menuItemId);
+    if (!Number.isInteger(menuItemId) || menuItemId < 1) {
+      return res.status(400).json({ error: 'Invalid menu item id.' });
+    }
+
+    const parsed = adminMenuItemUpdateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid menu item update payload.' });
+    }
+
+    const updates = parsed.data;
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'At least one field must be provided to update.' });
+    }
+
+    const setClauses = [];
+    const params = [];
+
+    if (typeof updates.itemName === 'string') {
+      setClauses.push('item_name = ?');
+      params.push(updates.itemName.trim());
+    }
+
+    if (typeof updates.description === 'string') {
+      setClauses.push('description = ?');
+      params.push(updates.description.trim());
+    }
+
+    if (typeof updates.basePrice === 'number') {
+      setClauses.push('base_price = ?');
+      params.push(Number(updates.basePrice));
+    }
+
+    setClauses.push('last_updated_by_employee_id = ?');
+    params.push(req.session.user.accountType === 'employee' ? req.session.user.accountId : null);
+
+    params.push(menuItemId);
+
+    let db;
+    try {
+      db = await ensureMenuDatabase();
+      const updateResult = await dbRun(
+        db,
+        `
+          UPDATE menu_items
+          SET ${setClauses.join(', ')}
+          WHERE menu_item_id = ?
+            AND is_active = 1;
+        `,
+        params
+      );
+
+      if (!updateResult || updateResult.changes === 0) {
+        return res.status(404).json({ error: 'Menu item not found or inactive.' });
+      }
+
+      return res.json({ ok: true, menuItemId });
+    } catch (err) {
+      if (String(err.message || '').includes('UNIQUE constraint failed')) {
+        return res.status(409).json({ error: 'A menu item with that name already exists in this category.' });
+      }
+
+      return res.status(500).json({ error: 'Unable to update menu item right now.' });
+    } finally {
+      if (db) {
+        db.close();
+      }
+    }
+  });
+
+  app.post('/api/orders/submit', requireSecureTransport, async (req, res) => {
+    const parsed = orderSubmissionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid order payload.', details: parsed.error.issues });
+    }
+
+    let db;
+    try {
+      db = await ensureMenuDatabase();
+      const isSignedInCustomer = req.session?.user?.accountType === 'customer';
+      let customerId = isSignedInCustomer ? req.session.user.accountId : null;
+
+      const payload = parsed.data;
+
+      if (payload.paymentMethod === 'card' && payload.paymentStatus !== 'authorized') {
+        return res.status(400).json({ error: 'Card payment must be authorized before order submission.' });
+      }
+
+      await dbRun(db, 'BEGIN TRANSACTION;');
+
+      if (!customerId) {
+        const guestEmail = `guest-order-${Date.now()}-${Math.floor(Math.random() * 100000)}@guest.local`;
+        const guestCustomerResult = await dbRun(
+          db,
+          `
+            INSERT INTO customers (email, first_name, last_name, phone, last_login_at)
+            VALUES (?, 'Guest', 'Checkout', NULL, NULL);
+          `,
+          [guestEmail]
+        );
+        customerId = guestCustomerResult.lastID;
+      }
+
+      let deliveryAddressId = null;
+      if (payload.orderType === 'delivery' && payload.deliveryAddress) {
+        const addressResult = await dbRun(
+          db,
+          `
+            INSERT INTO customer_addresses (customer_id, label, street_1, street_2, city, state, postal_code, is_default)
+            VALUES (?, 'Delivery', ?, ?, ?, ?, ?, 0);
+          `,
+          [
+            customerId,
+            payload.deliveryAddress.street1,
+            payload.deliveryAddress.street2 || null,
+            payload.deliveryAddress.city,
+            payload.deliveryAddress.state,
+            payload.deliveryAddress.postalCode,
+          ]
+        );
+        deliveryAddressId = addressResult.lastID;
+      }
+
+      const orderNumber = makeOrderNumber();
+      const orderResult = await dbRun(
+        db,
+        `
+          INSERT INTO customer_orders (
+            order_number,
+            customer_id,
+            delivery_address_id,
+            order_type,
+            status,
+            subtotal_amount,
+            tax_amount,
+            delivery_fee,
+            discount_amount,
+            total_amount,
+            notes
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?);
+        `,
+        [
+          orderNumber,
+          customerId,
+          deliveryAddressId,
+          payload.orderType === 'delivery' ? 'delivery' : 'pickup',
+          'placed',
+          payload.pricing.subtotal,
+          payload.pricing.taxes,
+          payload.orderType === 'delivery' ? payload.pricing.fees : 0,
+          payload.pricing.total,
+          `Tip: ${payload.tipAmount.toFixed(2)} | Payment: ${payload.paymentMethod}${payload.paymentId ? ` | PaymentId: ${payload.paymentId}` : ''}`,
+        ]
+      );
+
+      for (const cartItem of payload.cartItems) {
+        const menuItem = await dbGet(
+          db,
+          'SELECT menu_item_id FROM menu_items WHERE item_name = ? LIMIT 1;',
+          [cartItem.name]
+        );
+
+        const unitPrice = parsePrice(cartItem.price);
+        await dbRun(
+          db,
+          `
+            INSERT INTO customer_order_items (order_id, menu_item_id, item_name_snapshot, unit_price, quantity, line_total)
+            VALUES (?, ?, ?, ?, ?, ?);
+          `,
+          [
+            orderResult.lastID,
+            menuItem?.menu_item_id || null,
+            cartItem.name,
+            unitPrice,
+            cartItem.quantity,
+            Number((unitPrice * cartItem.quantity).toFixed(2)),
+          ]
+        );
+      }
+
+      await dbRun(
+        db,
+        `
+          INSERT INTO customer_order_status_history (order_id, status, note)
+          VALUES (?, 'placed', ?);
+        `,
+        [orderResult.lastID, 'Order placed via web checkout']
+      );
+
+      await dbRun(db, 'COMMIT;');
+
+      let notificationPreview = null;
+
+      if (payload.paymentMethod === 'card' && payload.paymentStatus === 'authorized') {
+        const notification = sendOrderNotification({
+          channel: 'email',
+          recipient: req.session?.user?.email || 'guest-checkout@operationpizzeria.local',
+          orderNumber,
+          status: 'payment_successful',
+        });
+
+        notificationPreview = {
+          channel: notification.channel,
+          recipient: notification.recipient,
+          status: notification.status,
+          body: `Payment receipt for ${orderNumber}: We received your payment of $${Number(payload.pricing.total || 0).toFixed(2)}. Your order is now being prepared.`,
+        };
+      }
+
+      return res.status(201).json({
+        ok: true,
+        orderId: orderResult.lastID,
+        orderNumber,
+        notificationPreview,
+      });
+    } catch {
+      if (db) {
+        try {
+          await dbRun(db, 'ROLLBACK;');
+        } catch {
+          // Ignore rollback error during error handling.
+        }
+      }
+      return res.status(500).json({ error: 'Unable to submit order right now.' });
+    } finally {
+      if (db) {
+        db.close();
+      }
+    }
+  });
+
+  app.get('/api/orders/history', requireSession, async (req, res) => {
+    let db;
+    try {
+      db = await ensureMenuDatabase();
+      const customerId = req.session.user?.accountType === 'customer' ? req.session.user.accountId : null;
+
+      if (!customerId) {
+        return res.status(403).json({ error: 'Order history is only available for signed-in customers.' });
+      }
+
+      const orders = await dbAll(
+        db,
+        `
+          SELECT order_id, order_number, status, total_amount, placed_at
+          FROM customer_orders
+          WHERE customer_id = ?
+          ORDER BY placed_at DESC;
+        `,
+        [customerId]
+      );
+
+      const history = [];
+      for (const order of orders) {
+        const items = await dbAll(
+          db,
+          `
+            SELECT item_name_snapshot AS name, quantity, line_total
+            FROM customer_order_items
+            WHERE order_id = ?;
+          `,
+          [order.order_id]
+        );
+
+        history.push({
+          orderId: order.order_id,
+          orderNumber: order.order_number,
+          status: order.status,
+          total: order.total_amount,
+          placedAt: order.placed_at,
+          items,
+        });
+      }
+
+      return res.json({ orders: history });
+    } catch {
+      return res.status(500).json({ error: 'Unable to load order history right now.' });
     } finally {
       if (db) {
         db.close();
