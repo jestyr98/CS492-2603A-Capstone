@@ -19,6 +19,7 @@ body,
 #root {
   margin: auto;
   min-height: 100%;
+  width: 100%;
 }
 
 body {
@@ -112,7 +113,7 @@ a {
   display: grid;
   gap: 1rem;
   margin-bottom: 1.5rem;
-  margin-left: 25%;
+  justify-items: center;
 }
 
 .hero-primary {
@@ -122,11 +123,17 @@ a {
 }
 
 .hero-card {
+  width: min(720px, 100%);
   background: var(--c-paper);
   border: 1px solid var(--c-border);
   border-radius: 18px;
   padding: 1rem;
   box-shadow: var(--shadow-soft);
+}
+
+.hero-card--contact {
+  margin-top: 1rem;
+  width: 100%;
 }
 
 .hero-card h2 {
@@ -162,6 +169,13 @@ a {
 .menu_header p {
   color: var(--c-ink-soft);
   margin-bottom: 1rem;
+}
+
+.menu_quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
 }
 
 .menu_quick-link {
@@ -230,10 +244,6 @@ a {
 }
 
 @media (min-width: 700px) {
-  .hero {
-    grid-template-columns: 1fr 1fr;
-  }
-
   .menu-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
