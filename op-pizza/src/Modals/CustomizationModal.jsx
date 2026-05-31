@@ -1,24 +1,24 @@
 import { useState } from 'react'
 
 function CustomizationModal({ item, onClose, onAddToCart }) {
+  const [selectedSize, setSelectedSize] = useState(item.options?.size?.[2] || '')
+  const [removedToppings, setRemovedToppings] = useState([])
+  const [selectedExtras, setSelectedExtras] = useState([])
+
+  const [selectedSauceOne, setSelectedSauceOne] = useState('')
+  const [selectedSauceTwo, setSelectedSauceTwo] = useState('')
+  const [selectedDip, setSelectedDip] = useState('')
+
+  const [selectedDressing, setSelectedDressing] = useState('')
+  const [removedIngredients, setRemovedIngredients] = useState([])
+
+  const [selectedPizzaChoice, setSelectedPizzaChoice] = useState('')
+  const [selectedWingChoice, setSelectedWingChoice] = useState('')
+  const [selectedBeverageChoice, setSelectedBeverageChoice] = useState('')
+
+  const [extraDips, setExtraDips] = useState({})
+
   if (!item) return null
-
-const [selectedSize, setSelectedSize] = useState(item.options?.size?.[2] || '')
-const [removedToppings, setRemovedToppings] = useState([])
-const [selectedExtras, setSelectedExtras] = useState([])
-
-const [selectedSauceOne, setSelectedSauceOne] = useState('')
-const [selectedSauceTwo, setSelectedSauceTwo] = useState('')
-const [selectedDip, setSelectedDip] = useState('')
-
-const [selectedDressing, setSelectedDressing] = useState('')
-const [removedIngredients, setRemovedIngredients] = useState([])
-
-const [selectedPizzaChoice, setSelectedPizzaChoice] = useState('')
-const [selectedWingChoice, setSelectedWingChoice] = useState('')
-const [selectedBeverageChoice, setSelectedBeverageChoice] = useState('')
-
-const [extraDips, setExtraDips] = useState({})
 
 const sizePrice = item.basePrice?.[selectedSize] || Number(item.price?.replace('$', '')) || 0
 
