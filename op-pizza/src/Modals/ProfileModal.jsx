@@ -6,6 +6,7 @@ function ProfileModal({
   email,
   name,
   phone,
+  orders = [],
   onClose,
   onEmailChange,
   onNameChange,
@@ -27,6 +28,33 @@ function ProfileModal({
             <p><strong>Phone:</strong> {phone || 'Not set'}</p>
             <p><strong>Favorite Order:</strong> Pepperoni Pizza</p>
             <p><strong>Rewards Points:</strong> 120</p>
+          </div>
+
+          <div className="profile-orders">
+            <h3>Past Orders</h3>
+            {orders.length === 0 ? (
+              <p>No previous orders found.</p>
+            ) : (
+              <ul>
+                {orders.map((order) => (
+                  <li key={order.orderId || order.orderNumber}>
+                    <strong>{order.orderNumber}</strong> - ${Number(order.total || 0).toFixed(2)} - {order.status}
+                    <div>
+                      Ordered: {order.placedAt ? new Date(order.placedAt).toLocaleString() : 'Unknown date'}
+                    </div>
+                    {Array.isArray(order.items) && order.items.length > 0 && (
+                      <ul>
+                        {order.items.map((item, index) => (
+                          <li key={`${order.orderNumber}-${item.name}-${index}`}>
+                            {item.name} x{item.quantity} (${Number(item.line_total || 0).toFixed(2)})
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {saveMessage && <p className="login-success" role="status">{saveMessage}</p>}

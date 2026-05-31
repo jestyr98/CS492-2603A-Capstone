@@ -16,23 +16,38 @@ function registerPaymentRoutes(app, deps) {
     TOKEN_TTL_SECONDS,
     ENFORCE_ONE_TIME_TOKEN,
     crypto,
+    appendPaymentAudit,
   } = deps;
 
-  app.post('/v1/tokens', requireSecureTransport, requireBearerToken, (req, res) => {
-    const parsed = tokenizeSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: 'Invalid payload', details: parsed.error.issues });
+  const normalizeCardNumber = (cardNumber) => String(cardNumber || '').replace(/\s+/g, '');
+
+  const getFailureReasonForCard = (cardDigits) => {
+    if (cardDigits.endsWith('0002')) {
+      return { code: 'insufficient_funds', message: 'Payment failed: insufficient funds.', retryable: false, status: 402 };
     }
 
-    const { card, metadata } = parsed.data;
+    if (cardDigits.endsWith('9995')) {
+      return { code: 'network_error', message: 'Payment failed: network error.', retryable: true, status: 503 };
+    }
 
+    if (cardDigits.endsWith('0000')) {
+      return { code: 'invalid_card', message: 'Payment failed: invalid card.', retryable: false, status: 400 };
+    }
+
+    return null;
+  };
+
+  const createTokenFromCard = (card, metadata = {}) => {
+    const normalizedCardNumber = normalizeCardNumber(card.cardNumber);
     const token = makeId('tok');
     const issuedAtMs = Date.now();
     const expiresAtMs = issuedAtMs + TOKEN_TTL_SECONDS * 1000;
+    const failureReason = getFailureReasonForCard(normalizedCardNumber);
+
     const tokenRecord = {
       token,
-      fingerprint: crypto.createHash('sha256').update(`${card.cardNumber}|${card.expiryMonth}|${card.expiryYear}`).digest('hex'),
-      maskedPan: maskPan(card.cardNumber),
+      fingerprint: crypto.createHash('sha256').update(`${normalizedCardNumber}|${card.expiryMonth}|${card.expiryYear}`).digest('hex'),
+      maskedPan: maskPan(normalizedCardNumber),
       expiryMonth: card.expiryMonth,
       expiryYear: card.expiryYear,
       cardholderName: card.cardholderName,
@@ -41,12 +56,73 @@ function registerPaymentRoutes(app, deps) {
       expiresAt: new Date(expiresAtMs).toISOString(),
       expiresAtMs,
       usedAt: null,
+      mockFailure: failureReason,
     };
 
     tokenVault.set(token, tokenRecord);
+    appendPaymentAudit({ token, amount: null, result: 'token_created' });
+    return tokenRecord;
+  };
+
+  const chargeWithToken = ({ token, amount, currency, merchantReference, idempotencyKey }) => {
+    const tokenRecord = tokenVault.get(token);
+
+    if (!tokenRecord) {
+      return { status: 404, body: { error: 'Token not found', code: 'token_not_found' } };
+    }
+
+    if (isTokenExpired(tokenRecord)) {
+      return { status: 410, body: { error: 'Token expired', code: 'token_expired' } };
+    }
+
+    if (ENFORCE_ONE_TIME_TOKEN && tokenRecord.usedAt) {
+      return { status: 409, body: { error: 'Token already used', code: 'token_already_used' } };
+    }
+
+    if (tokenRecord.mockFailure) {
+      appendPaymentAudit({ token, amount, result: tokenRecord.mockFailure.code });
+      return {
+        status: tokenRecord.mockFailure.status,
+        body: {
+          error: tokenRecord.mockFailure.message,
+          code: tokenRecord.mockFailure.code,
+          retryable: tokenRecord.mockFailure.retryable,
+        },
+      };
+    }
+
+    const paymentId = makeId('pay');
+    const response = {
+      paymentId,
+      status: 'authorized',
+      amount,
+      currency,
+      merchantReference,
+      token,
+      maskedPan: tokenRecord.maskedPan,
+      createdAt: new Date().toISOString(),
+    };
+
+    tokenRecord.usedAt = response.createdAt;
+    if (idempotencyKey) {
+      paymentsByIdempotency.set(idempotencyKey, response);
+    }
+    paymentsById.set(paymentId, response);
+    appendPaymentAudit({ token, amount, result: 'authorized' });
+    return { status: 201, body: response };
+  };
+
+  app.post('/v1/tokens', requireSecureTransport, requireBearerToken, (req, res) => {
+    const parsed = tokenizeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid payload', details: parsed.error.issues });
+    }
+
+    const { card, metadata } = parsed.data;
+    const tokenRecord = createTokenFromCard(card, metadata);
 
     res.status(201).json({
-      token,
+      token: tokenRecord.token,
       maskedPan: tokenRecord.maskedPan,
       expiryMonth: tokenRecord.expiryMonth,
       expiryYear: tokenRecord.expiryYear,
@@ -71,37 +147,8 @@ function registerPaymentRoutes(app, deps) {
     }
 
     const { token, amount, currency, merchantReference } = parsed.data;
-    const tokenRecord = tokenVault.get(token);
-
-    if (!tokenRecord) {
-      return res.status(404).json({ error: 'Token not found' });
-    }
-
-    if (isTokenExpired(tokenRecord)) {
-      return res.status(410).json({ error: 'Token expired' });
-    }
-
-    if (ENFORCE_ONE_TIME_TOKEN && tokenRecord.usedAt) {
-      return res.status(409).json({ error: 'Token already used' });
-    }
-
-    const paymentId = makeId('pay');
-    const response = {
-      paymentId,
-      status: 'authorized',
-      amount,
-      currency,
-      merchantReference,
-      token,
-      maskedPan: tokenRecord.maskedPan,
-      createdAt: new Date().toISOString(),
-    };
-
-    tokenRecord.usedAt = response.createdAt;
-    paymentsByIdempotency.set(idempotencyKey, response);
-    paymentsById.set(paymentId, response);
-
-    res.status(201).json(response);
+    const charge = chargeWithToken({ token, amount, currency, merchantReference, idempotencyKey });
+    res.status(charge.status).json(charge.body);
   });
 
   app.post('/v1/refunds', requireSecureTransport, requireBearerToken, (req, res) => {
@@ -151,50 +198,65 @@ function registerPaymentRoutes(app, deps) {
     }
 
     const { card, amount, currency, merchantReference } = parsed.data;
-
-    const token = makeId('tok');
-    const issuedAtMs = Date.now();
-    const expiresAtMs = issuedAtMs + TOKEN_TTL_SECONDS * 1000;
-    const tokenRecord = {
-      token,
-      fingerprint: crypto.createHash('sha256').update(`${card.cardNumber}|${card.expiryMonth}|${card.expiryYear}`).digest('hex'),
-      maskedPan: maskPan(card.cardNumber),
-      expiryMonth: card.expiryMonth,
-      expiryYear: card.expiryYear,
-      cardholderName: card.cardholderName,
-      metadata: req.session.user ? { userEmail: req.session.user.email } : {},
-      createdAt: new Date(issuedAtMs).toISOString(),
-      expiresAt: new Date(expiresAtMs).toISOString(),
-      expiresAtMs,
-      usedAt: null,
-    };
-    tokenVault.set(token, tokenRecord);
-
-    const paymentId = makeId('pay');
-    const idempotencyKey = makeId('idk');
-    const payment = {
-      paymentId,
-      status: 'authorized',
+    const tokenRecord = createTokenFromCard(card, req.session.user ? { userEmail: req.session.user.email } : {});
+    const charge = chargeWithToken({
+      token: tokenRecord.token,
       amount,
       currency,
       merchantReference,
-      token,
-      maskedPan: tokenRecord.maskedPan,
-      createdAt: new Date().toISOString(),
-    };
-
-    tokenRecord.usedAt = payment.createdAt;
-    paymentsByIdempotency.set(idempotencyKey, payment);
-    paymentsById.set(paymentId, payment);
-
-    res.status(201).json({
-      paymentId: payment.paymentId,
-      status: payment.status,
-      maskedPan: payment.maskedPan,
-      amount: payment.amount,
-      currency: payment.currency,
-      createdAt: payment.createdAt,
+      idempotencyKey: makeId('idk'),
     });
+
+    if (charge.status !== 201) {
+      return res.status(charge.status).json(charge.body);
+    }
+
+    return res.status(201).json({
+      paymentId: charge.body.paymentId,
+      status: charge.body.status,
+      maskedPan: charge.body.maskedPan,
+      amount: charge.body.amount,
+      currency: charge.body.currency,
+      createdAt: charge.body.createdAt,
+    });
+  });
+
+  app.post('/api/payments/tokenize', requireSecureTransport, (req, res) => {
+    const parsed = tokenizeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid payload', details: parsed.error.issues });
+    }
+
+    const tokenRecord = createTokenFromCard(
+      parsed.data.card,
+      req.session.user ? { userEmail: req.session.user.email } : {}
+    );
+
+    return res.status(201).json({
+      token: tokenRecord.token,
+      maskedPan: tokenRecord.maskedPan,
+      expiryMonth: tokenRecord.expiryMonth,
+      expiryYear: tokenRecord.expiryYear,
+      createdAt: tokenRecord.createdAt,
+      expiresAt: tokenRecord.expiresAt,
+    });
+  });
+
+  app.post('/api/payments/charge', requireSecureTransport, (req, res) => {
+    const parsed = paymentSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid payload', details: parsed.error.issues });
+    }
+
+    const idempotencyKey = req.header('idempotency-key') || makeId('idk');
+
+    if (paymentsByIdempotency.has(idempotencyKey)) {
+      return res.status(200).json(paymentsByIdempotency.get(idempotencyKey));
+    }
+
+    const { token, amount, currency, merchantReference } = parsed.data;
+    const charge = chargeWithToken({ token, amount, currency, merchantReference, idempotencyKey });
+    return res.status(charge.status).json(charge.body);
   });
 }
 

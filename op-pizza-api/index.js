@@ -12,6 +12,7 @@ const { loadConfig } = require('./lib/config');
 const { createSecurity } = require('./lib/security');
 const { createPaymentState } = require('./lib/paymentState');
 const { createMenuDatabase } = require('./lib/menuDatabase');
+const { createNotificationService } = require('./lib/notificationService');
 const schemas = require('./lib/schemas');
 
 const registerAuthRoutes = require('./routes/authRoutes');
@@ -36,6 +37,7 @@ const {
 
 const security = createSecurity({ API_BEARER_TOKEN, ALLOW_INSECURE_LOCALHOST });
 const paymentState = createPaymentState();
+const notificationService = createNotificationService();
 const menuDb = createMenuDatabase(config);
 
 app.disable('x-powered-by');
@@ -92,6 +94,8 @@ registerAuthRoutes(app, {
   BCRYPT_SALT_ROUNDS,
   registerSchema: schemas.registerSchema,
   loginSchema: schemas.loginSchema,
+  forgotPasswordSchema: schemas.forgotPasswordSchema,
+  resetPasswordSchema: schemas.resetPasswordSchema,
   hasAdminMenuAccess: security.hasAdminMenuAccess,
 });
 
@@ -112,6 +116,8 @@ registerPaymentRoutes(app, {
   TOKEN_TTL_SECONDS,
   ENFORCE_ONE_TIME_TOKEN,
   crypto: paymentState.crypto,
+  paymentAuditLog: paymentState.paymentAuditLog,
+  appendPaymentAudit: paymentState.appendPaymentAudit,
 });
 
 registerMenuRoutes(app, {
@@ -125,6 +131,9 @@ registerMenuRoutes(app, {
   dbGet: menuDb.dbGet,
   dbRun: menuDb.dbRun,
   adminMenuItemSchema: schemas.adminMenuItemSchema,
+  adminMenuItemUpdateSchema: schemas.adminMenuItemUpdateSchema,
+  orderSubmissionSchema: schemas.orderSubmissionSchema,
+  sendOrderNotification: notificationService.sendOrderNotification,
 });
 
 app.use((err, req, res, next) => {

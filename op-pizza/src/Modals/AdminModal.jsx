@@ -8,13 +8,17 @@ function AdminModal({
   addForm,
   addError,
   addLoading,
+  editForm,
+  editLoading,
   removeId,
   removeLoading,
   onFormChange,
   onPhotoSelected,
   onToggleIngredient,
+  onEditFormChange,
   onRemoveSelection,
   onSubmitAdd,
+  onSubmitEdit,
   onSubmitRemove,
   onReload,
   onClose,
@@ -49,7 +53,7 @@ function AdminModal({
         {loading && <p>Loading admin options...</p>}
         {!loading && error && <p className="login-error">{error}</p>}
 
-        <button onClick={onReload} disabled={loading || addLoading || removeLoading}>Refresh Options</button>
+        <button onClick={onReload} disabled={loading || addLoading || editLoading || removeLoading}>Refresh Options</button>
 
         <h3>Add Menu Item</h3>
 
@@ -131,8 +135,56 @@ function AdminModal({
 
         {addError && <p className="login-error">{addError}</p>}
 
-        <button onClick={onSubmitAdd} disabled={loading || addLoading || removeLoading}>
+        <button onClick={onSubmitAdd} disabled={loading || addLoading || editLoading || removeLoading}>
           {addLoading ? 'Saving...' : 'Add Menu Item'}
+        </button>
+
+        <h3>Edit Menu Item</h3>
+
+        <label htmlFor="admin-edit-item" className="input-label">Menu Item To Edit</label>
+        <select
+          id="admin-edit-item"
+          value={editForm.menuItemId}
+          onChange={(e) => onEditFormChange('menuItemId', e.target.value)}
+          disabled={loading || addLoading || editLoading || removeLoading}
+        >
+          <option value="">Select Menu Item To Edit</option>
+          {menuItems.map((item) => (
+            <option key={item.id} value={item.id}>{item.categoryName} - {item.name}</option>
+          ))}
+        </select>
+
+        <label htmlFor="admin-edit-name" className="input-label">New Name (optional)</label>
+        <input
+          id="admin-edit-name"
+          type="text"
+          value={editForm.itemName}
+          onChange={(e) => onEditFormChange('itemName', e.target.value)}
+          disabled={loading || addLoading || editLoading || removeLoading}
+        />
+
+        <label htmlFor="admin-edit-description" className="input-label">New Description (optional)</label>
+        <input
+          id="admin-edit-description"
+          type="text"
+          value={editForm.description}
+          onChange={(e) => onEditFormChange('description', e.target.value)}
+          disabled={loading || addLoading || editLoading || removeLoading}
+        />
+
+        <label htmlFor="admin-edit-base-price" className="input-label">New Base Price (optional)</label>
+        <input
+          id="admin-edit-base-price"
+          type="number"
+          min="0.01"
+          step="0.01"
+          value={editForm.basePrice}
+          onChange={(e) => onEditFormChange('basePrice', e.target.value)}
+          disabled={loading || addLoading || editLoading || removeLoading}
+        />
+
+        <button onClick={onSubmitEdit} disabled={!editForm.menuItemId || loading || addLoading || editLoading || removeLoading}>
+          {editLoading ? 'Updating...' : 'Update Menu Item'}
         </button>
 
         <h3>Remove Menu Item</h3>
@@ -142,7 +194,7 @@ function AdminModal({
           id="admin-remove-item"
           value={removeId}
           onChange={(e) => onRemoveSelection(e.target.value)}
-          disabled={loading || addLoading || removeLoading}
+          disabled={loading || addLoading || editLoading || removeLoading}
         >
           <option value="">Select Menu Item To Remove</option>
           {menuItems.map((item) => (
@@ -150,11 +202,11 @@ function AdminModal({
           ))}
         </select>
 
-        <button onClick={onSubmitRemove} disabled={!removeId || loading || addLoading || removeLoading}>
+        <button onClick={onSubmitRemove} disabled={!removeId || loading || addLoading || editLoading || removeLoading}>
           {removeLoading ? 'Removing...' : 'Remove Menu Item'}
         </button>
 
-        <button onClick={onClose} disabled={addLoading || removeLoading}>Close</button>
+        <button onClick={onClose} disabled={addLoading || editLoading || removeLoading}>Close</button>
     </ModalShell>
   )
 }

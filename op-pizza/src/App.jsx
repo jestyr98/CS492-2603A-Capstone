@@ -34,6 +34,8 @@ function resolveMenuImage(photoPath) {
 
 function App() {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null)
+  const [showMapView, setShowMapView] = useState(false)
+  const [showSpecials, setShowSpecials] = useState(false)
 
   const [authMode, setAuthMode] = useState('signin')
   const [firstName, setFirstName] = useState('')
@@ -41,6 +43,9 @@ function App() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [mfaMethod, setMfaMethod] = useState('email')
+  const [resetToken, setResetToken] = useState('')
+  const [loginSuccess, setLoginSuccess] = useState('')
   const [loginError, setLoginError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
 
@@ -55,6 +60,7 @@ function App() {
 
   const [cartItems, setCartItems] = useState([])
   const [showCart, setShowCart] = useState(false)
+  const [profileOrders, setProfileOrders] = useState([])
   const [selectedItem, setSelectedItem] = useState(null)
   const [menuSections, setMenuSections] = useState([])
   const [menuLoading, setMenuLoading] = useState(true)
@@ -67,6 +73,13 @@ function App() {
   const [adminAddLoading, setAdminAddLoading] = useState(false)
   const [adminRemoveLoading, setAdminRemoveLoading] = useState(false)
   const [adminRemoveId, setAdminRemoveId] = useState('')
+  const [adminEditLoading, setAdminEditLoading] = useState(false)
+  const [adminEditForm, setAdminEditForm] = useState({
+    menuItemId: '',
+    itemName: '',
+    description: '',
+    basePrice: '',
+  })
   const [adminPhotoFile, setAdminPhotoFile] = useState(null)
   const [adminForm, setAdminForm] = useState({
     categoryId: '',
@@ -103,7 +116,48 @@ function App() {
     return () => clearTimeout(timer)
   }, [loadMenu])
 
+  const loadOrderHistory = useCallback(async () => {
+    try {
+      const response = await fetch('/api/orders/history', {
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        setProfileOrders([])
+        return
+      }
+
+      const result = await response.json()
+      setProfileOrders(result.orders || [])
+    } catch {
+      setProfileOrders([])
+    }
+  }, [])
+
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
+
+  const getMenuItemCartQuantity = (menuItemId) => {
+    return cartItems
+      .filter((cartItem) => cartItem.id === menuItemId)
+      .reduce((sum, cartItem) => sum + cartItem.quantity, 0)
+  }
+
+  const popularItems = menuSections
+    .flatMap((section) => section.items || [])
+    .filter((item) => Boolean(item.photoPath))
+    .slice(0, 3)
+
+  const specialsSection = menuSections.find(
+    (section) => /special/i.test(section.title || '') || /special/i.test(section.id || '')
+  )
+
+  const nonSpecialMenuSections = menuSections.filter(
+    (section) => !(/special/i.test(section.title || '') || /special/i.test(section.id || ''))
+  )
+
+  const specialsBannerItems = (specialsSection?.items?.length ? specialsSection.items : popularItems)
+    .filter((item) => Boolean(item.photoPath))
+    .slice(0, 3)
 
   const getCartItemKey = (item) => {
     if (item.cartId) {
@@ -136,6 +190,10 @@ function App() {
     setCartItems((prev) => prev.filter((i) => getCartItemKey(i) !== itemKey))
   }
 
+  const removeMenuItemFromCart = (menuItemId) => {
+    setCartItems((prev) => prev.filter((i) => i.id !== menuItemId))
+  }
+
   const updateQuantity = (itemKey, quantity) => {
     if (quantity < 1) return
     setCartItems((prev) =>
@@ -143,11 +201,96 @@ function App() {
     )
   }
 
-  const isMenuOpen = Boolean(menuAnchorEl)
-  const primaryMenuSection = menuSections[0]
-  const primaryMenuHref = primaryMenuSection ? `#${primaryMenuSection.id}` : '#menu'
-  const primaryMenuLabel = primaryMenuSection ? primaryMenuSection.title : 'Menu'
+  const submitOrder = async (checkoutPayload) => {
+    const paymentMethod = checkoutPayload.paymentMethod
+    let paymentStatus = 'not_required'
+    let paymentId = null
 
+    if (paymentMethod === 'card') {
+      const card = checkoutPayload.paymentCard
+      const tokenizeResponse = await fetchWithCsrf('/api/payments/tokenize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ card }),
+      })
+
+      const tokenizeResult = await tokenizeResponse.json()
+      if (!tokenizeResponse.ok) {
+        throw new Error(tokenizeResult.error || 'Unable to tokenize payment card.')
+      }
+
+      const merchantReference = `ORDER-${Date.now()}`
+      let attemptCount = 0
+      let charged = false
+      let lastChargeError = null
+
+      while (!charged && attemptCount < 5) {
+        attemptCount += 1
+
+        const chargeResponse = await fetchWithCsrf('/api/payments/charge', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': `${merchantReference}-${attemptCount}`,
+          },
+          body: JSON.stringify({
+            token: tokenizeResult.token,
+            amount: checkoutPayload.pricing.total,
+            currency: 'USD',
+            merchantReference,
+          }),
+        })
+
+        const chargeResult = await chargeResponse.json()
+        if (chargeResponse.ok) {
+          charged = true
+          paymentStatus = chargeResult.status
+          paymentId = chargeResult.paymentId
+          break
+        }
+
+        lastChargeError = chargeResult
+        if (chargeResult.code !== 'network_error') {
+          throw new Error(chargeResult.error || 'Payment failed.')
+        }
+      }
+
+      if (!charged) {
+        throw new Error(lastChargeError?.error || 'Payment failed due to repeated network errors after 5 retries.')
+      }
+    }
+
+    const orderResponse = await fetchWithCsrf('/api/orders/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...checkoutPayload,
+        paymentStatus,
+        paymentId,
+      }),
+    })
+
+    const orderResult = await orderResponse.json()
+    if (!orderResponse.ok) {
+      throw new Error(orderResult.error || 'Unable to submit order right now.')
+    }
+
+    setCartItems([])
+    loadOrderHistory()
+
+    return {
+      message: paymentMethod === 'card'
+        ? 'Payment successful. Your order was submitted.'
+        : 'Order submitted successfully.',
+      orderNumber: orderResult.orderNumber,
+    }
+  }
+
+  const isMenuOpen = Boolean(menuAnchorEl)
   const openMenu = (event) => {
     setMenuAnchorEl(event.currentTarget)
   }
@@ -159,6 +302,9 @@ function App() {
   const resetAuthFields = () => {
     setPassword('')
     setConfirmPassword('')
+    setResetToken('')
+    setMfaMethod('email')
+    setLoginSuccess('')
     setLoginError('')
   }
 
@@ -197,6 +343,7 @@ function App() {
 
     setAuthLoading(true)
     setLoginError('')
+    setLoginSuccess('')
 
     try {
       const response = await fetchWithCsrf('/api/login', {
@@ -221,6 +368,7 @@ function App() {
       setAccountType(result.accountType || 'customer')
       setCanAccessAdminMenu(Boolean(result.canAccessAdminMenu))
       setIsSignedIn(true)
+      loadOrderHistory()
       setShowLogin(false)
       setAuthMode('signin')
       resetAuthFields()
@@ -249,6 +397,7 @@ function App() {
 
     setAuthLoading(true)
     setLoginError('')
+    setLoginSuccess('')
 
     try {
       const response = await fetchWithCsrf('/api/register', {
@@ -261,6 +410,7 @@ function App() {
           lastName,
           email,
           phone: phone || undefined,
+          mfaMethod,
           password,
         }),
       })
@@ -276,6 +426,7 @@ function App() {
       setAccountType(result.accountType || 'customer')
       setCanAccessAdminMenu(Boolean(result.canAccessAdminMenu))
       setIsSignedIn(true)
+      loadOrderHistory()
       setShowLogin(false)
       setAuthMode('signin')
       resetAuthFields()
@@ -303,8 +454,89 @@ function App() {
     setConfirmPassword('')
     setName('')
     setPhone('')
+    setProfileOrders([])
     setShowAdmin(false)
     closeMenu()
+  }
+
+  const handleRequestPasswordReset = async () => {
+    if (!email) {
+      setLoginError('Enter your email address first.')
+      return
+    }
+
+    setAuthLoading(true)
+    setLoginError('')
+    setLoginSuccess('')
+
+    try {
+      const response = await fetchWithCsrf('/api/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const result = await response.json()
+      if (!response.ok) {
+        throw new Error(result.error || 'Unable to request password reset right now.')
+      }
+
+      if (result.resetToken) {
+        setResetToken(result.resetToken)
+      }
+      setLoginSuccess('Reset token generated. Use it to set a new password.')
+      setAuthMode('forgot')
+    } catch (error) {
+      setLoginError(error.message || 'Unable to request password reset right now.')
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!email || !resetToken || !password) {
+      setLoginError('Email, reset token, and new password are required.')
+      return
+    }
+
+    if (password.length < 8) {
+      setLoginError('Password must be at least 8 characters long.')
+      return
+    }
+
+    setAuthLoading(true)
+    setLoginError('')
+    setLoginSuccess('')
+
+    try {
+      const response = await fetchWithCsrf('/api/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: resetToken,
+          password,
+        }),
+      })
+
+      const result = await response.json()
+      if (!response.ok) {
+        throw new Error(result.error || 'Unable to reset password right now.')
+      }
+
+      setLoginSuccess('Password reset successful. You can now sign in.')
+      setAuthMode('signin')
+      setResetToken('')
+      setPassword('')
+      setConfirmPassword('')
+    } catch (error) {
+      setLoginError(error.message || 'Unable to reset password right now.')
+    } finally {
+      setAuthLoading(false)
+    }
   }
 
   const toggleAdminIngredient = (ingredientId) => {
@@ -414,6 +646,60 @@ function App() {
     }
   }
 
+  const handleAdminEditItem = async () => {
+    setAdminAddError('')
+
+    if (!adminEditForm.menuItemId) {
+      setAdminAddError('Select a menu item to edit.')
+      return
+    }
+
+    const payload = {}
+    if (adminEditForm.itemName.trim()) {
+      payload.itemName = adminEditForm.itemName.trim()
+    }
+    if (adminEditForm.description.trim()) {
+      payload.description = adminEditForm.description.trim()
+    }
+    if (adminEditForm.basePrice !== '') {
+      payload.basePrice = Number(adminEditForm.basePrice)
+    }
+
+    if (Object.keys(payload).length === 0) {
+      setAdminAddError('Provide at least one field to update for the selected item.')
+      return
+    }
+
+    setAdminEditLoading(true)
+    try {
+      const response = await fetchWithCsrf(`/api/admin/menu-items/${adminEditForm.menuItemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      const result = await response.json()
+      if (!response.ok) {
+        throw new Error(result.error || 'Unable to update menu item right now.')
+      }
+
+      setAdminEditForm({
+        menuItemId: '',
+        itemName: '',
+        description: '',
+        basePrice: '',
+      })
+
+      await Promise.all([loadAdminOptions(), loadMenu()])
+    } catch (error) {
+      setAdminAddError(error.message || 'Unable to update menu item right now.')
+    } finally {
+      setAdminEditLoading(false)
+    }
+  }
+
   return (
     <>
       <a className="skip-link" href="#main-content">Skip to main content</a>
@@ -426,7 +712,17 @@ function App() {
           </a>
           
           <nav className="header_nav">
-            <a href={primaryMenuHref} className="header_link" onClick={closeMenu}>{primaryMenuLabel}</a>
+            <button
+              type="button"
+              className="header_link header_link-button"
+              aria-label={showSpecials ? 'Hide specials banner' : 'Show specials banner'}
+              onClick={() => {
+                setShowSpecials((prev) => !prev)
+                closeMenu()
+              }}
+            >
+              Specials
+            </button>
             <a href="#contact" className="header_link" onClick={closeMenu}>Contact</a>
             <a
               href="#signin"
@@ -453,7 +749,11 @@ function App() {
               canAccessAdminMenu={canAccessAdminMenu}
               onOpen={openMenu}
               onClose={closeMenu}
-              onViewProfile={() => { setShowProfile(true); closeMenu(); }}
+              onViewProfile={() => {
+                loadOrderHistory()
+                setShowProfile(true)
+                closeMenu()
+              }}
               onOpenAdmin={() => {
                 if (!canAccessAdminMenu) {
                   return
@@ -467,6 +767,33 @@ function App() {
             />
           </nav>
         </div>
+
+        {showSpecials && specialsBannerItems.length > 0 && (
+          <div className="header_popular container" aria-label="Special menu items">
+            {specialsBannerItems.map((item) => (
+              <article key={`popular-${item.id || item.name}`} className="header_popular-item">
+                <img
+                  src={resolveMenuImage(item.photoPath) || logo}
+                  alt={`Special item ${item.name}`}
+                  className="header_popular-image"
+                />
+                <span>{item.name}</span>
+                <div className="header_popular-actions">
+                  {hasCustomizationOptions(item) && (
+                    <button
+                      type="button"
+                      className="header_popular-customize"
+                      aria-label={`Customize ${item.name}`}
+                      onClick={() => setSelectedItem(item)}
+                    >
+                      Customize
+                    </button>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </header>
 
       <main className="main-content" id="main-content" tabIndex="-1">
@@ -491,7 +818,7 @@ function App() {
           </div>
 
           <nav className="menu_quick-links" aria-label="Menu section shortcuts">
-            {menuSections.map((section) => (
+            {nonSpecialMenuSections.map((section) => (
               <a key={section.id} href={`#${section.id}`} className="menu_quick-link">
                 {section.title}
               </a>
@@ -501,18 +828,25 @@ function App() {
           {menuLoading && <p role="status">Loading menu...</p>}
           {!menuLoading && menuError && <p role="alert">{menuError}</p>}
 
-          {!menuLoading && !menuError && menuSections.map((section) => (
+          {!menuLoading && !menuError && nonSpecialMenuSections.map((section) => (
             <section key={section.id} id={section.id} className="menu-section">
               <h3>{section.title}</h3>
               <div className="menu-grid">
-                {section.items.map((item) => (
+                {section.items.map((item) => {
+                  const itemCartQuantity = getMenuItemCartQuantity(item.id)
+                  const itemHasCustomization = hasCustomizationOptions(item)
+
+                  return (
                   <article className="menu-card" key={item.id || item.name}>
                     <img src={resolveMenuImage(item.photoPath) || logo} alt={`${item.name} menu item`} className="menu-card_image" />
                     <div className="menu-card_content">
                       <h4>{item.name}</h4>
                       <p>{item.description}</p>
                       <p className="menu-card_price">{item.price}</p>
-                      {hasCustomizationOptions(item) ? (
+                      {itemCartQuantity > 0 && (
+                        <p className="menu-item_in-cart">In cart: {itemCartQuantity}</p>
+                      )}
+                      {itemHasCustomization ? (
                         <button
                           type="button"
                           aria-label={`Customize ${item.name}`}
@@ -529,9 +863,19 @@ function App() {
                           Add to Cart
                         </button>
                       )}
+                      {itemCartQuantity > 0 && (
+                        <button
+                          type="button"
+                          className="menu-remove-button"
+                          aria-label={`Remove ${item.name} from cart`}
+                          onClick={() => removeMenuItemFromCart(item.id)}
+                        >
+                          Remove from Cart
+                        </button>
+                      )}
                     </div>
                   </article>
-                ))}
+                )})}
               </div>
             </section>
           ))}
@@ -543,7 +887,23 @@ function App() {
 
         <section className="hero-primary container" id="contact">
           <article className="hero-card hero-card--contact">
-            <img className="menu-card_image" src={storeFront}/>
+            {!showMapView ? (
+              <img className="menu-card_image" src={storeFront} alt="Operation Pizzeria storefront" />
+            ) : (
+              <iframe
+                className="contact-map"
+                title="Operation Pizzeria map and delivery radius"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=-81.056%2C33.985%2C-80.961%2C34.045&layer=mapnik&marker=34.015%2C-81.008"
+              />
+            )}
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => setShowMapView((prev) => !prev)}
+            >
+              {showMapView ? 'Show Road View Photo' : 'Show City Map + Delivery Radius'}
+            </button>
+            {showMapView && <p className="checkout-note">Delivery radius view: approximately 5 miles from store location.</p>}
             <h2>Contact & Hours</h2>
             <p>1408 Pepper Street, Columbia, SC 29201</p>
             <p>
@@ -570,23 +930,30 @@ function App() {
           lastName={lastName}
           phone={phone}
           confirmPassword={confirmPassword}
+          mfaMethod={mfaMethod}
+          resetToken={resetToken}
           email={email}
           password={password}
           loginError={loginError}
+          loginSuccess={loginSuccess}
           authLoading={authLoading}
           onAuthModeChange={(mode) => {
             setAuthMode(mode)
             setLoginError('')
+            setLoginSuccess('')
           }}
           onFirstNameChange={setFirstName}
           onLastNameChange={setLastName}
           onPhoneChange={setPhone}
           onConfirmPasswordChange={setConfirmPassword}
+          onMfaMethodChange={setMfaMethod}
+          onResetTokenChange={setResetToken}
           onEmailChange={setEmail}
           onPasswordChange={setPassword}
           onLogin={handleLogin}
           onCreateAccount={handleCreateAccount}
-          onForgotPassword={() => alert('Password reset link sent to your email.')}
+          onForgotPassword={handleRequestPasswordReset}
+          onResetPassword={handleResetPassword}
           onClose={() => {
             setShowLogin(false)
             setAuthMode('signin')
@@ -600,6 +967,7 @@ function App() {
           email={email}
           name={name}
           phone={phone}
+          orders={profileOrders}
           onClose={() => setShowProfile(false)}
           onEmailChange={setEmail}
           onNameChange={setName}
@@ -615,6 +983,8 @@ function App() {
           addForm={adminForm}
           addError={adminAddError}
           addLoading={adminAddLoading}
+          editForm={adminEditForm}
+          editLoading={adminEditLoading}
           removeId={adminRemoveId}
           removeLoading={adminRemoveLoading}
           onFormChange={(field, value) => {
@@ -622,8 +992,12 @@ function App() {
           }}
           onPhotoSelected={setAdminPhotoFile}
           onToggleIngredient={toggleAdminIngredient}
+          onEditFormChange={(field, value) => {
+            setAdminEditForm((prev) => ({ ...prev, [field]: value }))
+          }}
           onRemoveSelection={setAdminRemoveId}
           onSubmitAdd={handleAdminAddItem}
+          onSubmitEdit={handleAdminEditItem}
           onSubmitRemove={handleAdminRemoveItem}
           onReload={loadAdminOptions}
           selectedPhotoName={adminPhotoFile?.name || ''}
@@ -649,6 +1023,7 @@ function App() {
           onClose={() => setShowCart(false)}
           onRemove={removeFromCart}
           onUpdateQuantity={updateQuantity}
+          onSubmitOrder={submitOrder}
         />
       )}
     </>

@@ -20,6 +20,8 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
   const [selectedSauceOne, setSelectedSauceOne] = useState('')
   const [selectedSauceTwo, setSelectedSauceTwo] = useState('')
   const [selectedDip, setSelectedDip] = useState('')
+  const [selectedDough, setSelectedDough] = useState('')
+  const [selectedCheese, setSelectedCheese] = useState('')
 
   const [selectedDressing, setSelectedDressing] = useState('')
   const [removedIngredients, setRemovedIngredients] = useState([])
@@ -149,7 +151,14 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
     )
   )
 
-  const isAddDisabled = isMissingLunchSelections || isMissingComboSelections || isMissingWingSelections
+  const isMissingBuildYourOwnSelections = (
+    isBuildYourOwnPizza && (
+      (item.options?.dough && !selectedDough)
+      || (item.options?.cheese && !selectedCheese)
+    )
+  )
+
+  const isAddDisabled = isMissingLunchSelections || isMissingComboSelections || isMissingWingSelections || isMissingBuildYourOwnSelections
 
   const addDisabledMessage = isMissingLunchSelections
     ? 'Select both slices and a drink to continue.'
@@ -157,6 +166,8 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
       ? 'Select pizza, wings, beverage, and required combo customizations to continue.'
       : isMissingWingSelections
         ? `Select one coating sauce and one dipping sauce per ${wingOrderUnit}-wing order.`
+        : isMissingBuildYourOwnSelections
+          ? 'Select a dough and cheese option for your Build Your Own pizza.'
         : ''
 
   const renderSection = (title, content, defaultOpen = false, note = '') => (
@@ -287,6 +298,34 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
               ariaLabel="Choose drink"
             />
           ))
+        )}
+
+        {isBuildYourOwnPizza && item.options?.dough && (
+          renderSection('Choose Dough', (
+            <SelectControl
+              value={selectedDough}
+              onChange={setSelectedDough}
+              options={item.options.dough}
+              placeholder="Choose Dough"
+              required={isBuildYourOwnPizza}
+              ariaRequired={isBuildYourOwnPizza}
+              ariaLabel="Choose dough"
+            />
+          ), true)
+        )}
+
+        {isBuildYourOwnPizza && item.options?.cheese && (
+          renderSection('Choose Cheese', (
+            <SelectControl
+              value={selectedCheese}
+              onChange={setSelectedCheese}
+              options={item.options.cheese}
+              placeholder="Choose Cheese"
+              required={isBuildYourOwnPizza}
+              ariaRequired={isBuildYourOwnPizza}
+              ariaLabel="Choose cheese"
+            />
+          ), true)
         )}
 
         {item.options?.pizzaToppings && (
@@ -649,6 +688,8 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
                 selectedSauceOne,
                 selectedSauceTwo,
                 selectedDip: !isWingCustomization ? selectedDip : undefined,
+                selectedDough,
+                selectedCheese,
                 selectedDressing,
                 removedIngredients,
                 extraDips,

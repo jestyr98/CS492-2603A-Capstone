@@ -282,6 +282,50 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
     );
   }
 
+  async function ensureSecurityTables(db) {
+    await dbRun(
+      db,
+      `
+        CREATE TABLE IF NOT EXISTS account_mfa_methods (
+          account_type TEXT NOT NULL CHECK (account_type IN ('customer', 'employee')),
+          account_id INTEGER NOT NULL,
+          method TEXT NOT NULL CHECK (method IN ('email', 'sms')),
+          destination TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (account_type, account_id, method)
+        );
+      `
+    );
+
+    await dbRun(
+      db,
+      `
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+          token_id INTEGER PRIMARY KEY AUTOINCREMENT,
+          account_type TEXT NOT NULL CHECK (account_type IN ('customer', 'employee')),
+          account_id INTEGER NOT NULL,
+          token_hash TEXT NOT NULL UNIQUE,
+          expires_at TEXT NOT NULL,
+          used_at TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+      `
+    );
+
+    await dbRun(
+      db,
+      `
+        CREATE TABLE IF NOT EXISTS login_attempt_audit (
+          attempt_id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT NOT NULL,
+          ip_address TEXT,
+          status TEXT NOT NULL CHECK (status IN ('success', 'failure')),
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+      `
+    );
+  }
+
   async function seedIngredients(db) {
     const ingredientNames = [
       'Tomato Sauce',
@@ -460,6 +504,7 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
     if (!shouldBootstrap) {
       await ensureMenuPhotoColumn(db);
       await ensureIngredientTables(db);
+      await ensureSecurityTables(db);
       await seedIngredients(db);
       await seedCategoryIngredients(db);
       await seedMenuItemIngredients(db);
@@ -483,6 +528,7 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
 
     await ensureMenuPhotoColumn(db);
     await ensureIngredientTables(db);
+    await ensureSecurityTables(db);
     await seedIngredients(db);
     await seedCategoryIngredients(db);
     await seedMenuItemIngredients(db);
@@ -651,17 +697,23 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
       };
 
       const sauceOptions = pizzaCategoryIngredients.filter((name) => /sauce|pesto/i.test(name));
+      const cheeseOptions = pizzaCategoryIngredients.filter((name) => /cheese|mozzarella/i.test(name));
       const extraCandidates = pizzaCategoryIngredients.filter(
         (name) => !/sauce|pesto|dip|dressing|vinaigrette/i.test(name)
       );
 
       const options = {
         size: sizeOptions,
+        dough: ['Hand Tossed', 'Thin Crust', 'Cauliflower Crust'],
         addExtras: extraCandidates.map((name) => ({ name, price: 1.0 })),
       };
 
       if (sauceOptions.length > 0) {
         options.sauceOne = sauceOptions;
+      }
+
+      if (cheeseOptions.length > 0) {
+        options.cheese = cheeseOptions;
       }
 
       return {
