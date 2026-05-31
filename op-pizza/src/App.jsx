@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
 import logo from './assets/logo.svg'
 import storeFront from './assets/pizza-restaurant-exterior.jpg'
@@ -61,6 +61,7 @@ function App() {
   const [cartItems, setCartItems] = useState([])
   const [showCart, setShowCart] = useState(false)
   const [profileOrders, setProfileOrders] = useState([])
+  const [favoriteOrderId, setFavoriteOrderId] = useState(null)
   const [selectedItem, setSelectedItem] = useState(null)
   const [menuSections, setMenuSections] = useState([])
   const [menuLoading, setMenuLoading] = useState(true)
@@ -115,6 +116,37 @@ function App() {
 
     return () => clearTimeout(timer)
   }, [loadMenu])
+
+  const persistedFavoriteOrderId = useMemo(() => {
+    if (!email) {
+      return null
+    }
+
+    const savedFavoriteOrderId = window.localStorage.getItem(`opPizzaFavoriteOrder:${email.toLowerCase()}`)
+    return savedFavoriteOrderId ? Number(savedFavoriteOrderId) : null
+  }, [email])
+
+  const selectedFavoriteOrderId = favoriteOrderId ?? persistedFavoriteOrderId
+  const effectiveFavoriteOrderId = profileOrders.some((order) => order.orderId === selectedFavoriteOrderId)
+    ? selectedFavoriteOrderId
+    : null
+
+  const handleFavoriteOrderChange = (orderId) => {
+    const normalizedOrderId = Number(orderId)
+    const nextFavoriteOrderId = Number.isFinite(normalizedOrderId) ? normalizedOrderId : null
+    setFavoriteOrderId(nextFavoriteOrderId)
+
+    if (!email) {
+      return
+    }
+
+    const storageKey = `opPizzaFavoriteOrder:${email.toLowerCase()}`
+    if (nextFavoriteOrderId) {
+      window.localStorage.setItem(storageKey, String(nextFavoriteOrderId))
+    } else {
+      window.localStorage.removeItem(storageKey)
+    }
+  }
 
   const loadOrderHistory = useCallback(async () => {
     try {
@@ -284,8 +316,8 @@ function App() {
 
     return {
       message: paymentMethod === 'card'
-        ? 'Payment successful. Your order was submitted.'
-        : 'Order submitted successfully.',
+        ? `Payment successful. Your order was submitted.\nOrder Number: ${orderResult.orderNumber}\nTotal: $${Number(checkoutPayload?.pricing?.total || 0).toFixed(2)}`
+        : `Order submitted successfully.\nOrder Number: ${orderResult.orderNumber}\nTotal: $${Number(checkoutPayload?.pricing?.total || 0).toFixed(2)}`,
       orderNumber: orderResult.orderNumber,
     }
   }
@@ -368,6 +400,7 @@ function App() {
       setAccountType(result.accountType || 'customer')
       setCanAccessAdminMenu(Boolean(result.canAccessAdminMenu))
       setIsSignedIn(true)
+      setFavoriteOrderId(null)
       loadOrderHistory()
       setShowLogin(false)
       setAuthMode('signin')
@@ -426,6 +459,7 @@ function App() {
       setAccountType(result.accountType || 'customer')
       setCanAccessAdminMenu(Boolean(result.canAccessAdminMenu))
       setIsSignedIn(true)
+      setFavoriteOrderId(null)
       loadOrderHistory()
       setShowLogin(false)
       setAuthMode('signin')
@@ -455,6 +489,7 @@ function App() {
     setName('')
     setPhone('')
     setProfileOrders([])
+    setFavoriteOrderId(null)
     setShowAdmin(false)
     closeMenu()
   }
@@ -968,10 +1003,12 @@ function App() {
           name={name}
           phone={phone}
           orders={profileOrders}
+          favoriteOrderId={effectiveFavoriteOrderId}
           onClose={() => setShowProfile(false)}
           onEmailChange={setEmail}
           onNameChange={setName}
           onPhoneChange={setPhone}
+          onFavoriteOrderChange={handleFavoriteOrderChange}
         />
       )}
 

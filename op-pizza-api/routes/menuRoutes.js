@@ -378,7 +378,7 @@ function registerMenuRoutes(app, deps) {
     }
   });
 
-  app.post('/api/orders/submit', requireSecureTransport, requireSession, async (req, res) => {
+  app.post('/api/orders/submit', requireSecureTransport, async (req, res) => {
     const parsed = orderSubmissionSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ error: 'Invalid order payload.', details: parsed.error.issues });
@@ -387,11 +387,8 @@ function registerMenuRoutes(app, deps) {
     let db;
     try {
       db = await ensureMenuDatabase();
-      const customerId = req.session.user?.accountType === 'customer' ? req.session.user.accountId : null;
-
-      if (!customerId) {
-        return res.status(403).json({ error: 'Only signed-in customers can place orders.' });
-      }
+      const isSignedInCustomer = req.session?.user?.accountType === 'customer';
+      let customerId = isSignedInCustomer ? req.session.user.accountId : null;
 
       const payload = parsed.data;
 
@@ -400,6 +397,19 @@ function registerMenuRoutes(app, deps) {
       }
 
       await dbRun(db, 'BEGIN TRANSACTION;');
+
+      if (!customerId) {
+        const guestEmail = `guest-order-${Date.now()}-${Math.floor(Math.random() * 100000)}@guest.local`;
+        const guestCustomerResult = await dbRun(
+          db,
+          `
+            INSERT INTO customers (email, first_name, last_name, phone, last_login_at)
+            VALUES (?, 'Guest', 'Checkout', NULL, NULL);
+          `,
+          [guestEmail]
+        );
+        customerId = guestCustomerResult.lastID;
+      }
 
       let deliveryAddressId = null;
       if (payload.orderType === 'delivery' && payload.deliveryAddress) {
@@ -490,19 +500,29 @@ function registerMenuRoutes(app, deps) {
 
       await dbRun(db, 'COMMIT;');
 
+      let notificationPreview = null;
+
       if (payload.paymentMethod === 'card' && payload.paymentStatus === 'authorized') {
-        sendOrderNotification({
+        const notification = sendOrderNotification({
           channel: 'email',
-          recipient: req.session.user.email,
+          recipient: req.session?.user?.email || 'guest-checkout@operationpizzeria.local',
           orderNumber,
           status: 'payment_successful',
         });
+
+        notificationPreview = {
+          channel: notification.channel,
+          recipient: notification.recipient,
+          status: notification.status,
+          body: `Payment receipt for ${orderNumber}: We received your payment of $${Number(payload.pricing.total || 0).toFixed(2)}. Your order is now being prepared.`,
+        };
       }
 
       return res.status(201).json({
         ok: true,
         orderId: orderResult.lastID,
         orderNumber,
+        notificationPreview,
       });
     } catch {
       if (db) {

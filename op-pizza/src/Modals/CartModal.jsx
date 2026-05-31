@@ -115,9 +115,38 @@ function CartModal({
       }
     }
 
+    const normalizedCardNumber = String(cardNumber || '').replace(/\D/g, '').slice(0, 16)
+    const normalizedSecurityCode = String(securityCode || '').replace(/\D/g, '').slice(0, 4)
+    const normalizedExpiryMonth = Number(String(expiryMonth || '').replace(/\D/g, ''))
+    let normalizedExpiryYear = Number(String(expiryYear || '').replace(/\D/g, ''))
+
+    if (normalizedExpiryYear > 0 && normalizedExpiryYear < 100) {
+      normalizedExpiryYear += 2000
+    }
+
     if (isCardPayment) {
-      if (!cardNumber || !securityCode || !expiryMonth || !expiryYear) {
+      if (!normalizedCardNumber || !normalizedSecurityCode || !normalizedExpiryMonth || !normalizedExpiryYear) {
         setCheckoutError('Card payment requires card number, security code, and expiration date.')
+        return
+      }
+
+      if (normalizedCardNumber.length !== 16) {
+        setCheckoutError('Card number must be 16 digits.')
+        return
+      }
+
+      if (normalizedSecurityCode.length < 3 || normalizedSecurityCode.length > 4) {
+        setCheckoutError('Security code must be 3 or 4 digits.')
+        return
+      }
+
+      if (normalizedExpiryMonth < 1 || normalizedExpiryMonth > 12) {
+        setCheckoutError('Expiration month must be between 1 and 12.')
+        return
+      }
+
+      if (normalizedExpiryYear < new Date().getFullYear()) {
+        setCheckoutError('Expiration year is invalid.')
         return
       }
     }
@@ -139,10 +168,10 @@ function CartModal({
       },
       paymentCard: isCardPayment
         ? {
-          cardNumber,
-          expiryMonth: Number(expiryMonth),
-          expiryYear: Number(expiryYear),
-          cvv: securityCode,
+          cardNumber: normalizedCardNumber,
+          expiryMonth: normalizedExpiryMonth,
+          expiryYear: normalizedExpiryYear,
+          cvv: normalizedSecurityCode,
           cardholderName: 'Checkout Customer',
         }
         : null,
@@ -300,7 +329,8 @@ function CartModal({
                         <button
                           key={percent}
                           type="button"
-                          className={tipPercent === percent && !customTipAmount ? 'checkout-tip-selected' : ''}
+                          className={`checkout-tip-button ${tipPercent === percent && !customTipAmount ? 'checkout-tip-selected' : ''}`}
+                          aria-pressed={tipPercent === percent && !customTipAmount}
                           onClick={() => handleTipSelection(percent)}
                         >
                           {percent}%
@@ -361,7 +391,7 @@ function CartModal({
                           inputMode="numeric"
                           autoComplete="cc-number"
                           value={cardNumber}
-                          onChange={(event) => setCardNumber(event.target.value)}
+                          onChange={(event) => setCardNumber(event.target.value.replace(/\D/g, '').slice(0, 16))}
                         />
                         <button type="button" onClick={() => setShowCardNumber((prev) => !prev)}>
                           {showCardNumber ? 'Hide' : 'Unhide'}
@@ -377,7 +407,7 @@ function CartModal({
                           inputMode="numeric"
                           autoComplete="cc-csc"
                           value={securityCode}
-                          onChange={(event) => setSecurityCode(event.target.value)}
+                          onChange={(event) => setSecurityCode(event.target.value.replace(/\D/g, '').slice(0, 4))}
                         />
                         <button type="button" onClick={() => setShowSecurityCode((prev) => !prev)}>
                           {showSecurityCode ? 'Hide' : 'Unhide'}
@@ -393,7 +423,7 @@ function CartModal({
                           inputMode="numeric"
                           autoComplete="cc-exp-month"
                           value={expiryMonth}
-                          onChange={(event) => setExpiryMonth(event.target.value)}
+                          onChange={(event) => setExpiryMonth(event.target.value.replace(/\D/g, '').slice(0, 2))}
                         />
                       </label>
                       <label>
@@ -403,7 +433,7 @@ function CartModal({
                           inputMode="numeric"
                           autoComplete="cc-exp-year"
                           value={expiryYear}
-                          onChange={(event) => setExpiryYear(event.target.value)}
+                          onChange={(event) => setExpiryYear(event.target.value.replace(/\D/g, '').slice(0, 4))}
                         />
                       </label>
                     </div>

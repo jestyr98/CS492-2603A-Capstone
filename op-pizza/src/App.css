@@ -506,6 +506,52 @@ summary:focus-visible,
   padding-left: 18px;
 }
 
+.profile-order-summary {
+  margin-bottom: 4px;
+}
+
+.profile-order-items {
+  margin: 6px 0 8px;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.profile-primary-button,
+.profile-secondary-button,
+.profile-favorite-button {
+  border-radius: 8px;
+  font-weight: 700;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.profile-primary-button {
+  border: 1px solid var(--c-good);
+  background: var(--c-good);
+  color: #fff;
+}
+
+.profile-secondary-button {
+  border: 1px solid var(--c-accent);
+  background: var(--c-accent);
+  color: #fff;
+}
+
+.profile-favorite-button {
+  border: 1px solid var(--c-accent-dark);
+  background: #fff;
+  color: var(--c-accent-dark);
+  margin-top: 6px;
+}
+
+.profile-favorite-button--selected {
+  background: var(--c-accent-dark);
+  color: #fff;
+}
+
 .cart-modal {
   position: fixed;
   inset: 0;
@@ -681,6 +727,11 @@ summary:focus-visible,
   flex-wrap: wrap;
 }
 
+.checkout-tip-button {
+  min-width: 60px;
+  font-weight: 700;
+}
+
 .checkout-tip-buttons button,
 .checkout-submit-button,
 .checkout-input-with-toggle button {
@@ -693,9 +744,10 @@ summary:focus-visible,
 }
 
 .checkout-tip-selected {
-  background: var(--c-good);
+  background: #0c6b2f;
   color: #fff;
-  border-color: var(--c-good);
+  border-color: #0c6b2f;
+  box-shadow: inset 0 0 0 2px #e8ffe8;
 }
 
 .checkout-input-with-toggle {
@@ -739,6 +791,7 @@ summary:focus-visible,
 .checkout-success {
   margin: 0;
   color: #166534;
+  white-space: pre-line;
 }
 
 .checkout-submit-button {

@@ -514,4 +514,38 @@ describe('mock payment api', () => {
     expect(submitResponse.status).toBe(400);
     expect(submitResponse.body.error).toBe('Card payment must be authorized before order submission.');
   });
+
+  test('allows guest checkout order submission without sign in', async () => {
+    const guestAgent = request.agent(app);
+
+    const submitCsrf = await getCsrfToken(guestAgent);
+    const submitResponse = await guestAgent
+      .post('/api/orders/submit')
+      .set('x-csrf-token', submitCsrf)
+      .send({
+        cartItems: [
+          {
+            id: 1,
+            name: 'Margherita Classic',
+            price: '$16.99',
+            quantity: 1,
+          },
+        ],
+        orderType: 'carryout',
+        deliveryAddress: null,
+        billingAddress: null,
+        paymentMethod: 'cash',
+        tipAmount: 0,
+        pricing: {
+          subtotal: 16.99,
+          taxes: 1.0,
+          fees: 0,
+          total: 17.99,
+        },
+      });
+
+    expect(submitResponse.status).toBe(201);
+    expect(submitResponse.body.ok).toBe(true);
+    expect(submitResponse.body.orderNumber).toMatch(/^OP-/);
+  });
 });
