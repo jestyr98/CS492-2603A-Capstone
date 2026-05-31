@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 import logo from './assets/logo.svg'
+import storeFront from './assets/pizza-restaurant-exterior.jpg'
 import XIcon from '@mui/icons-material/X';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import InstagramIcon from '@mui/icons-material/Instagram';
@@ -427,7 +428,7 @@ function App() {
           <nav className="header_nav">
             <a href={primaryMenuHref} className="header_link" onClick={closeMenu}>{primaryMenuLabel}</a>
             <a href="#contact" className="header_link" onClick={closeMenu}>Contact</a>
-            <a 
+            <a
               href="#signin"
               className="header_link"
               onClick={(event) => {
@@ -542,6 +543,7 @@ function App() {
 
         <section className="hero-primary container" id="contact">
           <article className="hero-card hero-card--contact">
+            <img className="menu-card_image" src={storeFront}/>
             <h2>Contact & Hours</h2>
             <p>1408 Pepper Street, Columbia, SC 29201</p>
             <p>
