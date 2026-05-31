@@ -632,6 +632,7 @@ function App() {
       {showCart && (
         <CartModal
           cartItems={cartItems}
+          resolveItemImage={resolveMenuImage}
           onClose={() => setShowCart(false)}
           onRemove={removeFromCart}
           onUpdateQuantity={updateQuantity}
