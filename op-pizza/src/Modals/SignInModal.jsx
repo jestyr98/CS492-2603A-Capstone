@@ -77,7 +77,7 @@ function SignInModal({
 
         {loginError && <p className="login-error">{loginError}</p>}
 
-        <button onClick={isCreateMode ? onCreateAccount : onLogin} disabled={authLoading}>
+        <button className="login-button" onClick={isCreateMode ? onCreateAccount : onLogin} disabled={authLoading}>
           {authLoading ? 'Please wait...' : (isCreateMode ? 'Create Account' : 'Login')}
         </button>
 
@@ -105,7 +105,7 @@ function SignInModal({
           {isCreateMode ? 'Already have an account? Sign in' : 'New here? Create an account'}
         </a>
 
-        <button onClick={onClose}>
+        <button onClick={onClose} className="cancel-button">
           Cancel
         </button>
       </div>
