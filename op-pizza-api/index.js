@@ -40,6 +40,8 @@ const paymentState = createPaymentState();
 const notificationService = createNotificationService();
 const menuDb = createMenuDatabase(config);
 
+app.locals.notificationService = notificationService;
+
 app.disable('x-powered-by');
 app.set('trust proxy', TRUST_PROXY);
 

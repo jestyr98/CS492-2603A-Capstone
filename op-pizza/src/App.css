@@ -905,3 +905,134 @@ summary:focus-visible,
   font-size: 0.84rem;
   text-align: center;
 }
+
+.admin-box {
+  width: min(720px, 92vw);
+  max-height: 88vh;
+  overflow: auto;
+  gap: 14px;
+}
+
+.admin-intro {
+  margin: 0;
+  color: var(--c-ink-soft);
+}
+
+.admin-section {
+  border: 1px solid var(--c-border);
+  background: #fffaf3;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.admin-section-summary {
+  list-style: none;
+  cursor: pointer;
+  margin: 0;
+  padding: 12px;
+  font-weight: 700;
+  color: var(--c-ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-section-summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-section-summary::after {
+  content: '+';
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--c-accent-dark);
+}
+
+.admin-section[open] .admin-section-summary::after {
+  content: '-';
+}
+
+.admin-section-body {
+  padding: 0 12px 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.admin-section-body h3 {
+  margin: 0;
+  color: var(--c-ink);
+}
+
+.admin-input,
+.admin-file-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--c-ink);
+}
+
+.admin-photo-name,
+.admin-help,
+.admin-subtitle {
+  margin: 0;
+}
+
+.admin-help,
+.admin-photo-name {
+  color: var(--c-ink-soft);
+  font-size: 0.9rem;
+}
+
+.admin-ingredient-list {
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+  max-height: 190px;
+  overflow-y: auto;
+  display: grid;
+  gap: 6px;
+}
+
+.admin-ingredient-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-ink);
+}
+
+.admin-primary-button,
+.admin-secondary-button,
+.admin-danger-button {
+  border-radius: 8px;
+  font-weight: 700;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.admin-primary-button {
+  border: 1px solid var(--c-good);
+  background: var(--c-good);
+  color: #fff;
+}
+
+.admin-secondary-button {
+  border: 1px solid var(--c-border);
+  background: #fff;
+  color: var(--c-ink);
+}
+
+.admin-danger-button {
+  border: 1px solid #b42318;
+  background: #b42318;
+  color: #fff;
+}
+
+.admin-primary-button:disabled,
+.admin-secondary-button:disabled,
+.admin-danger-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
