@@ -9,7 +9,11 @@ import SelectControl from './components/SelectControl'
 import useEscapeToClose from '../hooks/useEscapeToClose'
 
 function CustomizationModal({ item, onClose, onAddToCart }) {
-  const [selectedSize, setSelectedSize] = useState(item.options?.size?.[2] || '')
+  const defaultSize = item.options?.size?.includes('Large')
+    ? 'Large'
+    : (item.options?.size?.[0] || '')
+
+  const [selectedSize, setSelectedSize] = useState(defaultSize)
   const [removedToppings, setRemovedToppings] = useState([])
   const [selectedExtras, setSelectedExtras] = useState([])
 

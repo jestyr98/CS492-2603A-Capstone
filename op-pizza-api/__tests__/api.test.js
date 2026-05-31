@@ -143,4 +143,53 @@ describe('mock payment api', () => {
     expect(refundRes.body.status).toBe('refunded');
     expect(refundRes.body.currency).toBe('USD');
   });
+
+  test('returns pizza size options and tier pricing for regular pizzas', async () => {
+    const menuRes = await request(app)
+      .get('/api/menu');
+
+    expect(menuRes.status).toBe(200);
+    expect(Array.isArray(menuRes.body.sections)).toBe(true);
+
+    const pizzasSection = menuRes.body.sections.find((section) => section.id === 'pizzas');
+    expect(pizzasSection).toBeDefined();
+
+    const standardPizzas = (pizzasSection.items || []).filter(
+      (item) => String(item.name || '').toLowerCase() !== 'build your own pizza'
+    );
+
+    expect(standardPizzas.length).toBeGreaterThan(0);
+
+    for (const pizza of standardPizzas) {
+      expect(pizza.options?.size).toEqual(['Personal', 'Medium', 'Large']);
+      expect(pizza.basePrice).toBeDefined();
+      expect(pizza.basePrice.Personal).toBeCloseTo(pizza.basePrice.Medium - 3, 2);
+      expect(pizza.basePrice.Medium).toBeCloseTo(pizza.basePrice.Large - 3, 2);
+      expect(pizza.price).toBe(`$${Number(pizza.basePrice.Large).toFixed(2)}`);
+    }
+  });
+
+  test('returns build your own pizza with 10.99 start and 3-dollar size deltas', async () => {
+    const menuRes = await request(app)
+      .get('/api/menu');
+
+    expect(menuRes.status).toBe(200);
+    expect(Array.isArray(menuRes.body.sections)).toBe(true);
+
+    const pizzasSection = menuRes.body.sections.find((section) => section.id === 'pizzas');
+    expect(pizzasSection).toBeDefined();
+
+    const byodPizza = (pizzasSection.items || []).find(
+      (item) => String(item.name || '').toLowerCase() === 'build your own pizza'
+    );
+
+    expect(byodPizza).toBeDefined();
+    expect(byodPizza.options?.size).toEqual(['Personal', 'Medium', 'Large']);
+    expect(byodPizza.basePrice).toEqual({
+      Personal: 10.99,
+      Medium: 13.99,
+      Large: 16.99,
+    });
+    expect(byodPizza.price).toBe('$16.99');
+  });
 });

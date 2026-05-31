@@ -78,6 +78,21 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
     return `$${Number(amount).toFixed(2)}`;
   }
 
+  function buildPizzaSizePrices(originalLargePrice) {
+    const baseLarge = Number(originalLargePrice);
+    const safeLarge = Number.isFinite(baseLarge) ? baseLarge : 16.99;
+
+    const adjustedLarge = Math.max(0, safeLarge);
+    const adjustedMedium = Math.max(0, safeLarge - 3);
+    const adjustedPersonal = Math.max(0, safeLarge - 6);
+
+    return {
+      Personal: Number(adjustedPersonal.toFixed(2)),
+      Medium: Number(adjustedMedium.toFixed(2)),
+      Large: Number(adjustedLarge.toFixed(2)),
+    };
+  }
+
   function loadDevCredentialsFromSecrets() {
     if (!fs.existsSync(APP_DEV_SECRETS_PATH)) {
       return [];
@@ -630,8 +645,8 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
     const buildYourOwnPizzaItem = (pizzaCategoryIngredients) => {
       const sizeOptions = ['Personal', 'Medium', 'Large'];
       const basePrice = {
-        Personal: 9.99,
-        Medium: 14.99,
+        Personal: 10.99,
+        Medium: 13.99,
         Large: 16.99,
       };
 
@@ -735,7 +750,17 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
                   price: formatCurrency(row.display_price),
                 };
 
-                if (options) {
+                if (row.section_id === 'pizzas') {
+                  const pizzaBasePrice = buildPizzaSizePrices(row.display_price);
+                  const pizzaSizeOptions = ['Personal', 'Medium', 'Large'];
+
+                  itemPayload.basePrice = pizzaBasePrice;
+                  itemPayload.price = formatCurrency(pizzaBasePrice.Large);
+                  itemPayload.options = {
+                    ...(options || {}),
+                    size: pizzaSizeOptions,
+                  };
+                } else if (options) {
                   itemPayload.options = options;
                 }
 
