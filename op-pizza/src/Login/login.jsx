@@ -7,7 +7,7 @@ function Login() {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (email && password) {
-            console.log("Logged in with:", { email, password });
+            console.log("Login submitted.");
         } else {
             alert("Please fill in all fields.");
         }
