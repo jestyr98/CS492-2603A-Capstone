@@ -187,7 +187,7 @@ WHERE c.slug = 'wings'
 UNION ALL
 SELECT c.category_id, i.ingredient_id
 FROM menu_categories c
-JOIN ingredients i ON i.ingredient_name IN ('Romaine Lettuce', 'Cherry Tomatoes', 'Cucumbers', 'Croutons', 'Parmesan', 'Herb Vinaigrette', 'Caesar Dressing', 'Chicken')
+JOIN ingredients i ON i.ingredient_name IN ('Romaine Lettuce', 'Cherry Tomatoes', 'Cucumbers', 'Croutons', 'Parmesan', 'Herb Vinaigrette', 'Caesar Dressing', 'Ranch Dip', 'Blue Cheese Dip', 'Chicken')
 WHERE c.slug = 'salads'
 UNION ALL
 SELECT c.category_id, i.ingredient_id

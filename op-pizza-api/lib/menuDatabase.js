@@ -384,7 +384,7 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
       ['specials', ['Buffalo Sauce', 'Ranch Dip', 'Blue Cheese Dip', 'Beverage Syrup']],
       ['pizzas', ['Tomato Sauce', 'Basil Pesto', 'Mozzarella Cheese', 'Fresh Mozzarella', 'Vegan Cheese', 'Pepperoni', 'Italian Sausage', 'Canadian Bacon', 'Salami', 'Black Olives', 'Bell Peppers', 'Mushrooms', 'Onions', 'Diced Tomatoes', 'Fresh Basil', 'Balsamic Glaze']],
       ['wings', ['Chicken', 'Buffalo Sauce', 'BBQ Sauce', 'Garlic Parmesan Sauce', 'Mango Habanero Sauce', 'Sweet Chili Sauce', 'Ranch Dip', 'Blue Cheese Dip', 'Honey Mustard Dip', 'Chipotle Ranch Dip']],
-      ['salads', ['Romaine Lettuce', 'Cherry Tomatoes', 'Cucumbers', 'Croutons', 'Parmesan', 'Herb Vinaigrette', 'Caesar Dressing', 'Chicken']],
+      ['salads', ['Romaine Lettuce', 'Cherry Tomatoes', 'Cucumbers', 'Croutons', 'Parmesan', 'Herb Vinaigrette', 'Caesar Dressing', 'Ranch Dip', 'Blue Cheese Dip', 'Chicken']],
       ['desserts', ['Dessert Mix']],
       ['beverages', ['Beverage Syrup']],
     ];
@@ -585,7 +585,7 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
     const buildOptions = ({ sectionId, itemName, itemIngredients, categoryIngredients, itemNamesBySectionId, ingredientsBySectionId }) => {
       const sauceOptions = categoryIngredients.filter((name) => /sauce|pesto/i.test(name));
       const dipOptions = categoryIngredients.filter((name) => /dip/i.test(name));
-      const dressingOptions = categoryIngredients.filter((name) => /dressing|vinaigrette/i.test(name));
+      const dressingOptions = categoryIngredients.filter((name) => /dressing|vinaigrette|ranch|blue cheese/i.test(name));
       const nonFlavorIngredientOptions = itemIngredients.filter(
         (name) => !/sauce|pesto|dip|dressing|vinaigrette/i.test(name)
       );

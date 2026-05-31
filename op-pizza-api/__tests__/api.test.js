@@ -263,6 +263,26 @@ describe('mock payment api', () => {
     expect(byodPizza.price).toBe('$16.99');
   });
 
+  test('returns ranch and blue cheese dressings for garden house salad', async () => {
+    const menuRes = await request(app)
+      .get('/api/menu');
+
+    expect(menuRes.status).toBe(200);
+    expect(Array.isArray(menuRes.body.sections)).toBe(true);
+
+    const saladsSection = menuRes.body.sections.find((section) => section.id === 'salads');
+    expect(saladsSection).toBeDefined();
+
+    const gardenHouseSalad = (saladsSection.items || []).find(
+      (item) => String(item.name || '').toLowerCase() === 'garden house salad'
+    );
+
+    expect(gardenHouseSalad).toBeDefined();
+    expect(gardenHouseSalad.options?.dressing).toEqual(
+      expect.arrayContaining(['Herb Vinaigrette', 'Caesar Dressing', 'Ranch Dip', 'Blue Cheese Dip'])
+    );
+  });
+
   test('admin can add and remove a menu item', async () => {
     const adminAgent = request.agent(app);
     const loginResponse = await signIn(adminAgent, {
