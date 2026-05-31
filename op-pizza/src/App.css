@@ -449,3 +449,126 @@ a {
   border-color: var(--c-accent);
   color: #fff;
 }
+
+.customization-box {
+  width: min(560px, 92vw);
+  max-height: 82vh;
+  overflow: auto;
+}
+
+.customize-section {
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: #fffaf3;
+}
+
+.customize-summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  color: var(--c-ink);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.customize-summary::-webkit-details-marker {
+  display: none;
+}
+
+.customize-summary::after {
+  content: '+';
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--c-accent-dark);
+}
+
+.customize-section[open] .customize-summary::after {
+  content: '-';
+}
+
+.customize-body {
+  display: grid;
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+
+.customize-heading {
+  margin: 4px 0 6px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.customize-note {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--c-ink-soft);
+}
+
+.customization-box select,
+.customization-box input[type='number'] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--c-ink);
+}
+
+.topping-options {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: #fffaf3;
+  padding: 10px;
+}
+
+.topping-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--c-ink);
+  font-size: 0.92rem;
+}
+
+.topping-option input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--c-accent);
+}
+
+.topping-option input[type='number'] {
+  width: 84px;
+  text-align: center;
+}
+
+.customize-add-button {
+  border: 1px solid var(--c-accent);
+  border-radius: 8px;
+  background: var(--c-accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+.customize-cancel-button {
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--c-ink);
+}
+
+.customize-actions {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), #fff 40%);
+}

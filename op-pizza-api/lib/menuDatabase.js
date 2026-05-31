@@ -494,6 +494,111 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
       ORDER BY c.sort_order ASC, m.item_name ASC;
     `;
 
+    const itemIngredientsQuery = `
+      SELECT
+        mi.menu_item_id,
+        i.ingredient_name
+      FROM menu_item_ingredients mi
+      JOIN ingredients i ON i.ingredient_id = mi.ingredient_id
+      WHERE i.is_active = 1
+      ORDER BY i.ingredient_name ASC;
+    `;
+
+    const categoryIngredientsQuery = `
+      SELECT
+        c.slug AS section_id,
+        i.ingredient_name
+      FROM category_ingredients ci
+      JOIN menu_categories c ON c.category_id = ci.category_id
+      JOIN ingredients i ON i.ingredient_id = ci.ingredient_id
+      WHERE c.is_active = 1
+        AND i.is_active = 1
+      ORDER BY c.sort_order ASC, i.ingredient_name ASC;
+    `;
+
+    const buildOptions = ({ sectionId, itemIngredients, categoryIngredients }) => {
+      const sauceOptions = categoryIngredients.filter((name) => /sauce/i.test(name));
+      const dipOptions = categoryIngredients.filter((name) => /dip/i.test(name));
+      const dressingOptions = categoryIngredients.filter((name) => /dressing|vinaigrette/i.test(name));
+      const nonFlavorIngredientOptions = itemIngredients.filter(
+        (name) => !/sauce|dip|dressing|vinaigrette/i.test(name)
+      );
+
+      const options = {};
+
+      if (sectionId === 'pizzas') {
+        if (itemIngredients.length > 0) {
+          options.removeIngredients = itemIngredients;
+        }
+
+        if (sauceOptions.length > 0) {
+          options.sauceOne = sauceOptions;
+        }
+      }
+
+      if (sectionId === 'wings') {
+        if (sauceOptions.length > 0) {
+          options.sauceOne = sauceOptions;
+          if (sauceOptions.length > 1) {
+            options.sauceTwo = sauceOptions;
+          }
+        }
+
+        if (dipOptions.length > 0) {
+          options.dip = dipOptions;
+        }
+
+        if (nonFlavorIngredientOptions.length > 0) {
+          options.removeIngredients = nonFlavorIngredientOptions;
+        }
+      }
+
+      if (sectionId === 'salads') {
+        if (dressingOptions.length > 0) {
+          options.dressing = dressingOptions;
+        }
+
+        if (nonFlavorIngredientOptions.length > 0) {
+          options.removeIngredients = nonFlavorIngredientOptions;
+        }
+      }
+
+      return Object.keys(options).length > 0 ? options : undefined;
+    };
+
+    const buildYourOwnPizzaItem = (pizzaCategoryIngredients) => {
+      const sizeOptions = ['Personal', 'Medium', 'Large'];
+      const basePrice = {
+        Personal: 9.99,
+        Medium: 14.99,
+        Large: 16.99,
+      };
+
+      const sauceOptions = pizzaCategoryIngredients.filter((name) => /sauce|pesto/i.test(name));
+      const extraCandidates = pizzaCategoryIngredients.filter(
+        (name) => !/sauce|pesto|dip|dressing|vinaigrette/i.test(name)
+      );
+
+      const options = {
+        size: sizeOptions,
+        addExtras: extraCandidates.map((name) => ({ name, price: 1.0 })),
+      };
+
+      if (sauceOptions.length > 0) {
+        options.sauceOne = sauceOptions;
+      }
+
+      return {
+        id: 'virtual-build-your-own-pizza',
+        name: 'Build Your Own Pizza',
+        description: 'Start with crust and sauce, then pick your size and add the toppings you want.',
+        photoPath: null,
+        price: formatCurrency(basePrice.Large),
+        basePrice,
+        options,
+      };
+    };
+
     return new Promise((resolve, reject) => {
       db.all(menuQuery, (err, rows) => {
         if (err) {
@@ -501,33 +606,87 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
           return;
         }
 
-        const sectionsMap = new Map();
-        for (const row of rows) {
-          if (!sectionsMap.has(row.section_id)) {
-            sectionsMap.set(row.section_id, {
-              id: row.section_id,
-              title: row.section_title,
-              sortOrder: row.sort_order,
-              items: [],
-            });
+        db.all(itemIngredientsQuery, (itemIngredientErr, itemIngredientRows) => {
+          if (itemIngredientErr) {
+            reject(itemIngredientErr);
+            return;
           }
 
-          if (row.menu_item_id) {
-            sectionsMap.get(row.section_id).items.push({
-              id: row.menu_item_id,
-              name: row.item_name,
-              description: row.description,
-              photoPath: row.photo_path || null,
-              price: formatCurrency(row.display_price),
-            });
-          }
-        }
+          db.all(categoryIngredientsQuery, (categoryIngredientErr, categoryIngredientRows) => {
+            if (categoryIngredientErr) {
+              reject(categoryIngredientErr);
+              return;
+            }
 
-        const sections = Array.from(sectionsMap.values())
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map(({ sortOrder, ...section }) => section);
+            const ingredientsByItemId = new Map();
+            for (const ingredientRow of itemIngredientRows || []) {
+              const ingredientList = ingredientsByItemId.get(ingredientRow.menu_item_id) || [];
+              ingredientList.push(ingredientRow.ingredient_name);
+              ingredientsByItemId.set(ingredientRow.menu_item_id, ingredientList);
+            }
 
-        resolve(sections);
+            const ingredientsBySectionId = new Map();
+            for (const ingredientRow of categoryIngredientRows || []) {
+              const ingredientList = ingredientsBySectionId.get(ingredientRow.section_id) || [];
+              ingredientList.push(ingredientRow.ingredient_name);
+              ingredientsBySectionId.set(ingredientRow.section_id, ingredientList);
+            }
+
+            const sectionsMap = new Map();
+            for (const row of rows) {
+              if (!sectionsMap.has(row.section_id)) {
+                sectionsMap.set(row.section_id, {
+                  id: row.section_id,
+                  title: row.section_title,
+                  sortOrder: row.sort_order,
+                  items: [],
+                });
+              }
+
+              if (row.menu_item_id) {
+                const itemIngredients = ingredientsByItemId.get(row.menu_item_id) || [];
+                const categoryIngredients = ingredientsBySectionId.get(row.section_id) || [];
+                const options = buildOptions({
+                  sectionId: row.section_id,
+                  itemIngredients,
+                  categoryIngredients,
+                });
+
+                const itemPayload = {
+                  id: row.menu_item_id,
+                  name: row.item_name,
+                  description: row.description,
+                  photoPath: row.photo_path || null,
+                  price: formatCurrency(row.display_price),
+                };
+
+                if (options) {
+                  itemPayload.options = options;
+                }
+
+                sectionsMap.get(row.section_id).items.push(itemPayload);
+              }
+            }
+
+            const sections = Array.from(sectionsMap.values())
+              .sort((a, b) => a.sortOrder - b.sortOrder)
+              .map(({ sortOrder, ...section }) => section);
+
+            const pizzasSection = sections.find((section) => section.id === 'pizzas');
+            if (pizzasSection) {
+              const hasBuildYourOwn = pizzasSection.items.some(
+                (item) => String(item.name || '').toLowerCase() === 'build your own pizza'
+              );
+
+              if (!hasBuildYourOwn) {
+                const pizzaCategoryIngredients = ingredientsBySectionId.get('pizzas') || [];
+                pizzasSection.items.push(buildYourOwnPizzaItem(pizzaCategoryIngredients));
+              }
+            }
+
+            resolve(sections);
+          });
+        });
       });
     });
   }

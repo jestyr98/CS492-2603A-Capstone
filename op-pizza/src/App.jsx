@@ -10,6 +10,7 @@ import ProfileModal from './Modals/ProfileModal'
 import SignInModal from './Modals/SignInModal'
 import CartModal from './Modals/CartModal'
 import AdminModal from './Modals/AdminModal'
+import CustomizationModal from './Modals/CustomizationModal'
 
 const menuImageModules = import.meta.glob('./assets/*.{jpg,jpeg,png,svg,webp}', {
   eager: true,
@@ -52,6 +53,7 @@ function App() {
 
   const [cartItems, setCartItems] = useState([])
   const [showCart, setShowCart] = useState(false)
+  const [selectedItem, setSelectedItem] = useState(null)
   const [menuSections, setMenuSections] = useState([])
   const [menuLoading, setMenuLoading] = useState(true)
   const [menuError, setMenuError] = useState('')
@@ -101,26 +103,41 @@ function App() {
 
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
+  const getCartItemKey = (item) => {
+    if (item.cartId) {
+      return item.cartId
+    }
+
+    return `${item.id || item.name}:${item.price || ''}:${item.selectedSize || ''}`
+  }
+
+  const hasCustomizationOptions = (item) => {
+    return Boolean(item?.options && Object.keys(item.options).length > 0)
+  }
+
   const addToCart = (item) => {
+    const itemKey = getCartItemKey(item)
+
     setCartItems((prev) => {
-      const existing = prev.find((i) => i.name === item.name)
+      const existing = prev.find((i) => getCartItemKey(i) === itemKey)
       if (existing) {
         return prev.map((i) =>
-          i.name === item.name ? { ...i, quantity: i.quantity + 1 } : i
+          getCartItemKey(i) === itemKey ? { ...i, quantity: i.quantity + 1 } : i
         )
       }
-      return [...prev, { ...item, quantity: 1 }]
+
+      return [...prev, { ...item, cartId: itemKey, quantity: 1 }]
     })
   }
 
-  const removeFromCart = (name) => {
-    setCartItems((prev) => prev.filter((i) => i.name !== name))
+  const removeFromCart = (itemKey) => {
+    setCartItems((prev) => prev.filter((i) => getCartItemKey(i) !== itemKey))
   }
 
-  const updateQuantity = (name, quantity) => {
+  const updateQuantity = (itemKey, quantity) => {
     if (quantity < 1) return
     setCartItems((prev) =>
-      prev.map((i) => (i.name === name ? { ...i, quantity } : i))
+      prev.map((i) => (getCartItemKey(i) === itemKey ? { ...i, quantity } : i))
     )
   }
 
@@ -527,7 +544,11 @@ function App() {
                       <h4>{item.name}</h4>
                       <p>{item.description}</p>
                       <p className="menu-card_price">{item.price}</p>
-                      <button onClick={() => addToCart(item)}>Add to Cart</button>
+                      {hasCustomizationOptions(item) ? (
+                        <button onClick={() => setSelectedItem(item)}>Customize</button>
+                      ) : (
+                        <button onClick={() => addToCart(item)}>Add to Cart</button>
+                      )}
                     </div>
                   </article>
                 ))}
@@ -626,6 +647,17 @@ function App() {
           onReload={loadAdminOptions}
           selectedPhotoName={adminPhotoFile?.name || ''}
           onClose={() => setShowAdmin(false)}
+        />
+      )}
+
+      {selectedItem && (
+        <CustomizationModal
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onAddToCart={(customizedItem) => {
+            addToCart(customizedItem)
+            setSelectedItem(null)
+          }}
         />
       )}
 

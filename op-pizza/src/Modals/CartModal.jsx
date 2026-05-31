@@ -14,7 +14,7 @@ function CartModal({ cartItems, resolveItemImage, onClose, onRemove, onUpdateQua
         ) : (
           <ul className="cart-list">
             {cartItems.map((item) => (
-              <li key={item.name} className="cart-item">
+              <li key={item.cartId || item.id || item.name} className="cart-item">
                 <div className="cart-item_media">
                   {resolveItemImage?.(item.photoPath) ? (
                     <img
@@ -32,12 +32,12 @@ function CartModal({ cartItems, resolveItemImage, onClose, onRemove, onUpdateQua
                   <span className="cart-item_price">{item.price}</span>
 
                   <div className="cart-item_qty">
-                    <button onClick={() => onUpdateQuantity(item.name, item.quantity - 1)}>-</button>
+                    <button onClick={() => onUpdateQuantity(item.cartId || item.id || item.name, item.quantity - 1)}>-</button>
                     <span>{item.quantity}</span>
-                    <button onClick={() => onUpdateQuantity(item.name, item.quantity + 1)}>+</button>
+                    <button onClick={() => onUpdateQuantity(item.cartId || item.id || item.name, item.quantity + 1)}>+</button>
                   </div>
 
-                  <button className="cart-item_remove-button" onClick={() => onRemove(item.name)}>
+                  <button className="cart-item_remove-button" onClick={() => onRemove(item.cartId || item.id || item.name)}>
                     Remove
                   </button>
                 </div>
