@@ -11,6 +11,7 @@ import SignInModal from './Modals/SignInModal'
 import CartModal from './Modals/CartModal'
 import AdminModal from './Modals/AdminModal'
 import CustomizationModal from './Modals/CustomizationModal'
+import { fetchWithCsrf } from './lib/api'
 
 const menuImageModules = import.meta.glob('./assets/*.{jpg,jpeg,png,svg,webp}', {
   eager: true,
@@ -154,19 +155,6 @@ function App() {
     setMenuAnchorEl(null)
   }
 
-  const fetchCsrfToken = async () => {
-    const csrfResponse = await fetch('/api/csrf-token', {
-      credentials: 'include',
-    })
-
-    if (!csrfResponse.ok) {
-      throw new Error('Unable to initialize secure sign in. Please refresh and try again.')
-    }
-
-    const csrfData = await csrfResponse.json()
-    return csrfData.csrfToken
-  }
-
   const resetAuthFields = () => {
     setPassword('')
     setConfirmPassword('')
@@ -210,13 +198,10 @@ function App() {
     setLoginError('')
 
     try {
-      const csrfToken = await fetchCsrfToken()
-      const response = await fetch('/api/login', {
+      const response = await fetchWithCsrf('/api/login', {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken,
         },
         body: JSON.stringify({
           email,
@@ -265,13 +250,10 @@ function App() {
     setLoginError('')
 
     try {
-      const csrfToken = await fetchCsrfToken()
-      const response = await fetch('/api/register', {
+      const response = await fetchWithCsrf('/api/register', {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken,
         },
         body: JSON.stringify({
           firstName,
@@ -305,13 +287,8 @@ function App() {
 
   const handleSignOut = async () => {
     try {
-      const csrfToken = await fetchCsrfToken()
-      await fetch('/api/logout', {
+      await fetchWithCsrf('/api/logout', {
         method: 'POST',
-        credentials: 'include',
-        headers: {
-          'x-csrf-token': csrfToken,
-        },
       })
     } catch {
       // Keep client sign-out resilient even when the logout request fails.
@@ -361,16 +338,11 @@ function App() {
 
     setAdminAddLoading(true)
     try {
-      const csrfToken = await fetchCsrfToken()
       const uploadPayload = new FormData()
       uploadPayload.append('image', adminPhotoFile)
 
-      const uploadResponse = await fetch('/api/admin/menu-images', {
+      const uploadResponse = await fetchWithCsrf('/api/admin/menu-images', {
         method: 'POST',
-        credentials: 'include',
-        headers: {
-          'x-csrf-token': csrfToken,
-        },
         body: uploadPayload,
       })
 
@@ -379,12 +351,10 @@ function App() {
         throw new Error(uploadResult.error || 'Unable to upload image right now.')
       }
 
-      const response = await fetch('/api/admin/menu-items', {
+      const response = await fetchWithCsrf('/api/admin/menu-items', {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken,
         },
         body: JSON.stringify({
           categoryId: Number(adminForm.categoryId),
@@ -425,13 +395,8 @@ function App() {
     setAdminAddError('')
     setAdminRemoveLoading(true)
     try {
-      const csrfToken = await fetchCsrfToken()
-      const response = await fetch(`/api/admin/menu-items/${adminRemoveId}`, {
+      const response = await fetchWithCsrf(`/api/admin/menu-items/${adminRemoveId}`, {
         method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'x-csrf-token': csrfToken,
-        },
       })
 
       const result = await response.json()

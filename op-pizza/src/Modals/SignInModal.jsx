@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import useEscapeToClose from '../hooks/useEscapeToClose'
+import ModalShell from './components/ModalShell'
 
 function SignInModal({
   authMode,
@@ -24,16 +25,7 @@ function SignInModal({
 }) {
   const isCreateMode = authMode === 'create'
 
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose()
-      }
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  useEscapeToClose(onClose)
 
   const handleSubmit = (event) => {
     event.preventDefault()
@@ -45,13 +37,7 @@ function SignInModal({
   }
 
   return (
-    <div className="login-modal" role="presentation">
-      <div
-        className="login-box"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="auth-modal-title"
-      >
+    <ModalShell ariaLabelledBy="auth-modal-title">
         <h2 id="auth-modal-title">{isCreateMode ? 'Create Account' : 'Sign In'}</h2>
 
         <form onSubmit={handleSubmit} className="modal-form">
@@ -153,8 +139,7 @@ function SignInModal({
           Cancel
         </button>
         </form>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 

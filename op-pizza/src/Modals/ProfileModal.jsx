@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import useEscapeToClose from '../hooks/useEscapeToClose'
+import ModalShell from './components/ModalShell'
 
 function ProfileModal({
   email,
@@ -12,26 +14,11 @@ function ProfileModal({
   const [isEditing, setIsEditing] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
 
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose()
-      }
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  useEscapeToClose(onClose)
 
   if (!isEditing) {
     return (
-      <div className="login-modal" id="customer-profile" role="presentation">
-        <div
-          className="login-box"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="profile-modal-title"
-        >
+      <ModalShell overlayId="customer-profile" ariaLabelledBy="profile-modal-title">
           <h2 id="profile-modal-title">Customer Profile</h2>
 
           <div className="profile-info">
@@ -51,19 +38,12 @@ function ProfileModal({
           <button type="button" onClick={onClose}>
             Close
           </button>
-        </div>
-      </div>
+      </ModalShell>
     )
   }
 
   return (
-    <div className="login-modal" id="customer-profile" role="presentation">
-      <div
-        className="login-box"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="profile-edit-title"
-      >
+    <ModalShell overlayId="customer-profile" ariaLabelledBy="profile-edit-title">
         <h2 id="profile-edit-title">Update Profile</h2>
 
         <label htmlFor="profile-name" className="input-label">Name</label>
@@ -107,8 +87,7 @@ function ProfileModal({
         <button type="button" onClick={() => setIsEditing(false)}>
           Cancel
         </button>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 

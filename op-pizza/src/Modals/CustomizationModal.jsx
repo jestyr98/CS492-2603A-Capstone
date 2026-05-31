@@ -1,4 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import CheckboxOptionList from './components/CheckboxOptionList'
+import ModalShell from './components/ModalShell'
+import SaucePerOrderSection from './components/SaucePerOrderSection'
+import SelectControl from './components/SelectControl'
+import useEscapeToClose from '../hooks/useEscapeToClose'
 
 function CustomizationModal({ item, onClose, onAddToCart }) {
   const [selectedSize, setSelectedSize] = useState(item.options?.size?.[2] || '')
@@ -36,16 +41,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
   const firstWingDipSelectRef = useRef(null)
   const isWingCustomizationForFocus = Boolean(item?.options?.wingCoatingSauces || item?.options?.wingDipSauces)
 
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose()
-      }
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  useEscapeToClose(onClose)
 
   useEffect(() => {
     if (isWingCustomizationForFocus && useSameWingCoatingSauce) {
@@ -162,13 +158,10 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
   )
 
   return (
-    <div className="login-modal" role="presentation">
-      <div
-        className="login-box customization-box"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="customization-modal-title"
-      >
+    <ModalShell
+      ariaLabelledBy="customization-modal-title"
+      boxClassName="login-box customization-box"
+    >
         <h2 id="customization-modal-title">Customize {item.name}</h2>
 
         <div className="customize-content">
@@ -205,28 +198,20 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
         {item.options?.sliceOneIngredients && (
           renderSection(
             'Choose First Slice Ingredients',
-            (
-              <div className="topping-options">
-                {item.options.sliceOneIngredients.map((option) => (
-                  <label key={option} className="topping-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedSliceOneIngredients.includes(option)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedSliceOneIngredients([...selectedSliceOneIngredients, option])
-                        } else {
-                          setSelectedSliceOneIngredients(
-                            selectedSliceOneIngredients.filter((ingredient) => ingredient !== option)
-                          )
-                        }
-                      }}
-                    />
-                    {option}
-                  </label>
-                ))}
-              </div>
-            ),
+            <CheckboxOptionList
+              options={item.options.sliceOneIngredients}
+              selectedValues={selectedSliceOneIngredients}
+              onToggle={(option, isChecked) => {
+                if (isChecked) {
+                  setSelectedSliceOneIngredients([...selectedSliceOneIngredients, option])
+                  return
+                }
+
+                setSelectedSliceOneIngredients(
+                  selectedSliceOneIngredients.filter((ingredient) => ingredient !== option)
+                )
+              }}
+            />,
             true,
             `First ${includedToppingsCount} toppings are included. Additional toppings are +$${extraToppingPrice.toFixed(2)} each.`
           )
@@ -249,28 +234,20 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
         {item.options?.sliceTwoIngredients && (
           renderSection(
             'Choose Second Slice Ingredients',
-            (
-              <div className="topping-options">
-                {item.options.sliceTwoIngredients.map((option) => (
-                  <label key={option} className="topping-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedSliceTwoIngredients.includes(option)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedSliceTwoIngredients([...selectedSliceTwoIngredients, option])
-                        } else {
-                          setSelectedSliceTwoIngredients(
-                            selectedSliceTwoIngredients.filter((ingredient) => ingredient !== option)
-                          )
-                        }
-                      }}
-                    />
-                    {option}
-                  </label>
-                ))}
-              </div>
-            ),
+            <CheckboxOptionList
+              options={item.options.sliceTwoIngredients}
+              selectedValues={selectedSliceTwoIngredients}
+              onToggle={(option, isChecked) => {
+                if (isChecked) {
+                  setSelectedSliceTwoIngredients([...selectedSliceTwoIngredients, option])
+                  return
+                }
+
+                setSelectedSliceTwoIngredients(
+                  selectedSliceTwoIngredients.filter((ingredient) => ingredient !== option)
+                )
+              }}
+            />,
             true,
             `First ${includedToppingsCount} toppings are included. Additional toppings are +$${extraToppingPrice.toFixed(2)} each.`
           )
@@ -278,43 +255,32 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
 
         {item.options?.drink && (
           renderSection('Choose Drink', (
-            <select
+            <SelectControl
               value={selectedDrink}
-              onChange={(e) => setSelectedDrink(e.target.value)}
-            >
-              <option value="">Choose Drink</option>
-              {item.options.drink.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+              onChange={setSelectedDrink}
+              options={item.options.drink}
+              placeholder="Choose Drink"
+            />
           ))
         )}
 
         {item.options?.pizzaToppings && (
           renderSection(
             'Choose Pizza Toppings',
-            (
-              <div className="topping-options">
-                {item.options.pizzaToppings.map((option) => (
-                  <label key={option} className="topping-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedPizzaToppings.includes(option)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedPizzaToppings([...selectedPizzaToppings, option])
-                        } else {
-                          setSelectedPizzaToppings(
-                            selectedPizzaToppings.filter((topping) => topping !== option)
-                          )
-                        }
-                      }}
-                    />
-                    {option}
-                  </label>
-                ))}
-              </div>
-            ),
+            <CheckboxOptionList
+              options={item.options.pizzaToppings}
+              selectedValues={selectedPizzaToppings}
+              onToggle={(option, isChecked) => {
+                if (isChecked) {
+                  setSelectedPizzaToppings([...selectedPizzaToppings, option])
+                  return
+                }
+
+                setSelectedPizzaToppings(
+                  selectedPizzaToppings.filter((topping) => topping !== option)
+                )
+              }}
+            />,
             false,
             `First ${includedToppingsCount} toppings are included. Additional toppings are +$${extraToppingPrice.toFixed(2)} each.`
           )
@@ -345,57 +311,44 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
 
         {isComboCustomization && selectedPizzaChoice && availableComboPizzaSauces.length > 0 && (
           renderSection('Choose Pizza Sauce', (
-            <select
+            <SelectControl
               value={selectedComboPizzaSauce}
-              onChange={(e) => setSelectedComboPizzaSauce(e.target.value)}
-            >
-              <option value="">Keep default sauce</option>
-              {availableComboPizzaSauces.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+              onChange={setSelectedComboPizzaSauce}
+              options={availableComboPizzaSauces}
+              placeholder="Keep default sauce"
+            />
           ))
         )}
 
         {isComboBuildYourOwnPizza && availableComboPizzaSizes.length > 0 && (
           renderSection('Choose Build Your Own Size', (
-            <select
+            <SelectControl
               value={selectedComboPizzaSize}
+              onChange={setSelectedComboPizzaSize}
+              options={availableComboPizzaSizes}
+              placeholder="Choose Size"
               required={isComboBuildYourOwnPizza}
-              aria-required={isComboBuildYourOwnPizza}
-              onChange={(e) => setSelectedComboPizzaSize(e.target.value)}
-            >
-              <option value="">Choose Size</option>
-              {availableComboPizzaSizes.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+              ariaRequired={isComboBuildYourOwnPizza}
+            />
           ), true)
         )}
 
         {isComboCustomization && selectedPizzaChoice && availableComboPizzaToppings.length > 0 && (
           renderSection('Customize Pizza Toppings', (
-            <div className="topping-options">
-              {availableComboPizzaToppings.map((option) => (
-                <label key={option} className="topping-option">
-                  <input
-                    type="checkbox"
-                    checked={selectedComboPizzaToppings.includes(option)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedComboPizzaToppings([...selectedComboPizzaToppings, option])
-                        return
-                      }
+            <CheckboxOptionList
+              options={availableComboPizzaToppings}
+              selectedValues={selectedComboPizzaToppings}
+              onToggle={(option, isChecked) => {
+                if (isChecked) {
+                  setSelectedComboPizzaToppings([...selectedComboPizzaToppings, option])
+                  return
+                }
 
-                      setSelectedComboPizzaToppings(
-                        selectedComboPizzaToppings.filter((topping) => topping !== option)
-                      )
-                    }}
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
+                setSelectedComboPizzaToppings(
+                  selectedComboPizzaToppings.filter((topping) => topping !== option)
+                )
+              }}
+            />
           ))
         )}
 
@@ -425,49 +378,40 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
 
         {isComboCustomization && selectedWingChoice && availableComboWingCoatingSauces.length > 0 && (
           renderSection('Choose Wing Coating Sauce', (
-            <select
+            <SelectControl
               value={selectedComboWingCoatingSauce}
+              onChange={setSelectedComboWingCoatingSauce}
+              options={availableComboWingCoatingSauces}
+              placeholder="Choose Coating Sauce"
               required={Boolean(selectedWingChoice && availableComboWingCoatingSauces.length > 0)}
-              aria-required={Boolean(selectedWingChoice && availableComboWingCoatingSauces.length > 0)}
-              onChange={(e) => setSelectedComboWingCoatingSauce(e.target.value)}
-            >
-              <option value="">Choose Coating Sauce</option>
-              {availableComboWingCoatingSauces.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+              ariaRequired={Boolean(selectedWingChoice && availableComboWingCoatingSauces.length > 0)}
+            />
           ))
         )}
 
         {isComboCustomization && selectedWingChoice && availableComboWingDipSauces.length > 0 && (
           renderSection('Choose Wing Dipping Sauce', (
-            <select
+            <SelectControl
               value={selectedComboWingDipSauce}
+              onChange={setSelectedComboWingDipSauce}
+              options={availableComboWingDipSauces}
+              placeholder="Choose Dipping Sauce"
               required={Boolean(selectedWingChoice && availableComboWingDipSauces.length > 0)}
-              aria-required={Boolean(selectedWingChoice && availableComboWingDipSauces.length > 0)}
-              onChange={(e) => setSelectedComboWingDipSauce(e.target.value)}
-            >
-              <option value="">Choose Dipping Sauce</option>
-              {availableComboWingDipSauces.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+              ariaRequired={Boolean(selectedWingChoice && availableComboWingDipSauces.length > 0)}
+            />
           ))
         )}
 
         {item.options?.beverageChoice && (
           renderSection('Choose Beverage', (
-            <select
+            <SelectControl
               value={selectedBeverageChoice}
+              onChange={setSelectedBeverageChoice}
+              options={item.options.beverageChoice}
+              placeholder="Choose Beverage"
               required={Boolean(item.options?.beverageChoice)}
-              aria-required={Boolean(item.options?.beverageChoice)}
-              onChange={(e) => setSelectedBeverageChoice(e.target.value)}
-            >
-              <option value="">Choose Beverage</option>
-              {item.options.beverageChoice.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+              ariaRequired={Boolean(item.options?.beverageChoice)}
+            />
           ))
         )}
 
@@ -511,155 +455,109 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
 
         {isWingCustomization && availableWingCoatingSauces.length > 0 && (
           renderSection('Choose Coating Sauce(s)', (
-            <div className="topping-options">
-              <label className="topping-option">
-                <input
-                  type="checkbox"
-                  checked={useSameWingCoatingSauce}
-                  onChange={(e) => {
-                    const shouldUseSame = e.target.checked
-                    setUseSameWingCoatingSauce(shouldUseSame)
-                    if (shouldUseSame) {
-                      setSelectedWingCoatingSauces((prev) => [prev[0] || ''])
-                      return
-                    }
+            <SaucePerOrderSection
+              values={selectedWingCoatingSauces}
+              options={availableWingCoatingSauces}
+              useSame={useSameWingCoatingSauce}
+              onToggleUseSame={(shouldUseSame) => {
+                setUseSameWingCoatingSauce(shouldUseSame)
+                if (shouldUseSame) {
+                  setSelectedWingCoatingSauces((prev) => [prev[0] || ''])
+                  return
+                }
 
-                    setSelectedWingCoatingSauces((prev) => {
-                      const first = prev[0] || ''
-                      return Array.from({ length: wingOrderCount }, () => first)
-                    })
-                  }}
-                />
-                Use same coating sauce for all orders
-              </label>
-
-              {(useSameWingCoatingSauce ? selectedWingCoatingSauces.slice(0, 1) : selectedWingCoatingSauces).map((selectedSauce, index) => (
-                <label key={`wing-coating-${index}`} className="topping-option">
-                  Coating Sauce #{index + 1}
-                  <select
-                    ref={index === 0 ? firstWingCoatingSelectRef : null}
-                    value={selectedSauce}
-                    required={isWingCustomization}
-                    aria-required={isWingCustomization}
-                    onChange={(e) => {
-                      const next = [...(useSameWingCoatingSauce ? selectedWingCoatingSauces.slice(0, 1) : selectedWingCoatingSauces)]
-                      next[index] = e.target.value
-                      setSelectedWingCoatingSauces(next)
-                    }}
-                  >
-                    <option value="">Choose Coating Sauce</option>
-                    {availableWingCoatingSauces.map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </label>
-              ))}
-            </div>
+                setSelectedWingCoatingSauces((prev) => {
+                  const first = prev[0] || ''
+                  return Array.from({ length: wingOrderCount }, () => first)
+                })
+              }}
+              onChangeAt={(index, nextValue, useSame) => {
+                const next = [...(useSame ? selectedWingCoatingSauces.slice(0, 1) : selectedWingCoatingSauces)]
+                next[index] = nextValue
+                setSelectedWingCoatingSauces(next)
+              }}
+              sameLabel="Use same coating sauce for all orders"
+              selectLabelPrefix="Coating Sauce"
+              placeholder="Choose Coating Sauce"
+              firstSelectRef={firstWingCoatingSelectRef}
+              required={isWingCustomization}
+            />
           ), true, `You get one coating sauce per ${wingOrderUnit}-wing order. If all orders use the same coating, enable the checkbox to choose it once.`)
         )}
 
         {isWingCustomization && availableWingDipSauces.length > 0 && (
           renderSection('Choose Dipping Sauce(s)', (
-            <div className="topping-options">
-              <label className="topping-option">
-                <input
-                  type="checkbox"
-                  checked={useSameWingDipSauce}
-                  onChange={(e) => {
-                    const shouldUseSame = e.target.checked
-                    setUseSameWingDipSauce(shouldUseSame)
-                    if (shouldUseSame) {
-                      setSelectedWingDipSauces((prev) => [prev[0] || ''])
-                      return
-                    }
+            <SaucePerOrderSection
+              values={selectedWingDipSauces}
+              options={availableWingDipSauces}
+              useSame={useSameWingDipSauce}
+              onToggleUseSame={(shouldUseSame) => {
+                setUseSameWingDipSauce(shouldUseSame)
+                if (shouldUseSame) {
+                  setSelectedWingDipSauces((prev) => [prev[0] || ''])
+                  return
+                }
 
-                    setSelectedWingDipSauces((prev) => {
-                      const first = prev[0] || ''
-                      return Array.from({ length: wingOrderCount }, () => first)
-                    })
-                  }}
-                />
-                Use same dipping sauce for all orders
-              </label>
-
-              {(useSameWingDipSauce ? selectedWingDipSauces.slice(0, 1) : selectedWingDipSauces).map((selectedSauce, index) => (
-                <label key={`wing-dip-${index}`} className="topping-option">
-                  Dipping Sauce #{index + 1}
-                  <select
-                    ref={index === 0 ? firstWingDipSelectRef : null}
-                    value={selectedSauce}
-                    required={isWingCustomization}
-                    aria-required={isWingCustomization}
-                    onChange={(e) => {
-                      const next = [...(useSameWingDipSauce ? selectedWingDipSauces.slice(0, 1) : selectedWingDipSauces)]
-                      next[index] = e.target.value
-                      setSelectedWingDipSauces(next)
-                    }}
-                  >
-                    <option value="">Choose Dipping Sauce</option>
-                    {availableWingDipSauces.map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </label>
-              ))}
-            </div>
+                setSelectedWingDipSauces((prev) => {
+                  const first = prev[0] || ''
+                  return Array.from({ length: wingOrderCount }, () => first)
+                })
+              }}
+              onChangeAt={(index, nextValue, useSame) => {
+                const next = [...(useSame ? selectedWingDipSauces.slice(0, 1) : selectedWingDipSauces)]
+                next[index] = nextValue
+                setSelectedWingDipSauces(next)
+              }}
+              sameLabel="Use same dipping sauce for all orders"
+              selectLabelPrefix="Dipping Sauce"
+              placeholder="Choose Dipping Sauce"
+              firstSelectRef={firstWingDipSelectRef}
+              required={isWingCustomization}
+            />
           ), true, `You get one dipping sauce per ${wingOrderUnit}-wing order. If all orders use the same dip, enable the checkbox to choose it once.`)
         )}
 
         {item.options?.dressing && (
           renderSection('Choose Dressing', (
-            <select
+            <SelectControl
               value={selectedDressing}
-              onChange={(e) => setSelectedDressing(e.target.value)}
-            >
-              <option value="">Choose Dressing</option>
-              {item.options.dressing.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+              onChange={setSelectedDressing}
+              options={item.options.dressing}
+              placeholder="Choose Dressing"
+            />
           ))
         )}
 
         {!isWingCustomization && item.options?.sauceOne && (
           renderSection('Choose First Sauce', (
-            <select
+            <SelectControl
               value={selectedSauceOne}
-              onChange={(e) => setSelectedSauceOne(e.target.value)}
-            >
-              <option value="">Choose First Sauce</option>
-              {item.options.sauceOne.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+              onChange={setSelectedSauceOne}
+              options={item.options.sauceOne}
+              placeholder="Choose First Sauce"
+            />
           ))
         )}
 
         {!isWingCustomization && item.options?.sauceTwo && (
           renderSection('Choose Second Sauce', (
-            <select
+            <SelectControl
               value={selectedSauceTwo}
-              onChange={(e) => setSelectedSauceTwo(e.target.value)}
-            >
-              <option value="">Choose Second Sauce</option>
-              {item.options.sauceTwo.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+              onChange={setSelectedSauceTwo}
+              options={item.options.sauceTwo}
+              placeholder="Choose Second Sauce"
+            />
           ))
         )}
 
         {!isWingCustomization && item.options?.dip && (
           renderSection('Choose Dip', (
-            <select
+            <SelectControl
               value={selectedDip}
-              onChange={(e) => setSelectedDip(e.target.value)}
-            >
-              <option value="">Choose Dip</option>
-              {item.options.dip.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+              onChange={setSelectedDip}
+              options={item.options.dip}
+              placeholder="Choose Dip"
+            />
           ))
         )}
 
@@ -695,26 +593,18 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
         {item.options?.removeToppings && (
           renderSection(
             'Customize Toppings',
-            (
-              <div className="topping-options">
-                {item.options.removeToppings.map((option) => (
-                  <label key={option} className="topping-option">
-                    <input
-                      type="checkbox"
-                      checked={!removedToppings.includes(option)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setRemovedToppings(removedToppings.filter((topping) => topping !== option))
-                        } else {
-                          setRemovedToppings([...removedToppings, option])
-                        }
-                      }}
-                    />
-                    {option}
-                  </label>
-                ))}
-              </div>
-            ),
+            <CheckboxOptionList
+              options={item.options.removeToppings}
+              selectedValues={item.options.removeToppings.filter((option) => !removedToppings.includes(option))}
+              onToggle={(option, isChecked) => {
+                if (isChecked) {
+                  setRemovedToppings(removedToppings.filter((topping) => topping !== option))
+                  return
+                }
+
+                setRemovedToppings([...removedToppings, option])
+              }}
+            />,
             false,
             'Uncheck any toppings you want removed.'
           )
@@ -723,28 +613,20 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
         {!isWingCustomization && item.options?.removeIngredients && (
           renderSection(
             'Customize Ingredients',
-            (
-              <div className="topping-options">
-                {item.options.removeIngredients.map((option) => (
-                  <label key={option} className="topping-option">
-                    <input
-                      type="checkbox"
-                      checked={!removedIngredients.includes(option)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setRemovedIngredients(
-                            removedIngredients.filter((ingredient) => ingredient !== option)
-                          )
-                        } else {
-                          setRemovedIngredients([...removedIngredients, option])
-                        }
-                      }}
-                    />
-                    {option}
-                  </label>
-                ))}
-              </div>
-            ),
+            <CheckboxOptionList
+              options={item.options.removeIngredients}
+              selectedValues={item.options.removeIngredients.filter((option) => !removedIngredients.includes(option))}
+              onToggle={(option, isChecked) => {
+                if (isChecked) {
+                  setRemovedIngredients(
+                    removedIngredients.filter((ingredient) => ingredient !== option)
+                  )
+                  return
+                }
+
+                setRemovedIngredients([...removedIngredients, option])
+              }}
+            />,
             false,
             'Uncheck any ingredients you want removed.'
           )
@@ -834,8 +716,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
             Cancel
           </button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 

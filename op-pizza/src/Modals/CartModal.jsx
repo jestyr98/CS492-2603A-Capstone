@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import useEscapeToClose from '../hooks/useEscapeToClose'
+import ModalShell from './components/ModalShell'
 
 function CartModal({ cartItems, resolveItemImage, onClose, onRemove, onUpdateQuantity }) {
   const total = cartItems.reduce((sum, item) => {
@@ -6,25 +7,14 @@ function CartModal({ cartItems, resolveItemImage, onClose, onRemove, onUpdateQua
     return sum + price * item.quantity
   }, 0)
 
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose()
-      }
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  useEscapeToClose(onClose)
 
   return (
-    <div className="cart-modal" role="presentation">
-      <div
-        className="cart-box"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cart-modal-title"
-      >
+    <ModalShell
+      overlayClassName="cart-modal"
+      boxClassName="cart-box"
+      ariaLabelledBy="cart-modal-title"
+    >
         <h2 id="cart-modal-title">Your Cart</h2>
 
         {cartItems.length === 0 ? (
@@ -86,8 +76,7 @@ function CartModal({ cartItems, resolveItemImage, onClose, onRemove, onUpdateQua
         )}
 
         <button type="button" className="cart-close-button" onClick={onClose}>Close</button>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 

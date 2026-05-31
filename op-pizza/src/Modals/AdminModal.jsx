@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import useEscapeToClose from '../hooks/useEscapeToClose'
+import ModalShell from './components/ModalShell'
 
 function AdminModal({
   options,
@@ -33,26 +34,14 @@ function AdminModal({
     ? ingredientItems.filter((item) => allowedIngredientIds.has(item.id))
     : []
 
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose()
-      }
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  useEscapeToClose(onClose)
 
   return (
-    <div className="login-modal" id="admin-modal" role="presentation">
-      <div
-        className="login-box"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="admin-modal-title"
-        style={{ width: 'min(680px, 92vw)', maxHeight: '90vh', overflowY: 'auto' }}
-      >
+    <ModalShell
+      overlayId="admin-modal"
+      ariaLabelledBy="admin-modal-title"
+      boxStyle={{ width: 'min(680px, 92vw)', maxHeight: '90vh', overflowY: 'auto' }}
+    >
         <h2 id="admin-modal-title">Admin</h2>
 
         <p>Manage menu items with ingredient inputs from the database.</p>
@@ -166,8 +155,7 @@ function AdminModal({
         </button>
 
         <button onClick={onClose} disabled={addLoading || removeLoading}>Close</button>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 
