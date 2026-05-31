@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import CheckboxToggleList from './components/CheckboxToggleList'
 import CheckboxOptionList from './components/CheckboxOptionList'
 import ModalShell from './components/ModalShell'
+import NumberInputControl from './components/NumberInputControl'
+import QuantityOptionList from './components/QuantityOptionList'
 import SaucePerOrderSection from './components/SaucePerOrderSection'
 import SelectControl from './components/SelectControl'
 import useEscapeToClose from '../hooks/useEscapeToClose'
@@ -26,6 +29,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
   const [selectedComboWingCoatingSauce, setSelectedComboWingCoatingSauce] = useState('')
   const [selectedComboWingDipSauce, setSelectedComboWingDipSauce] = useState('')
   const [selectedSliceOne, setSelectedSliceOne] = useState('')
+  const [selectedSliceTwo, setSelectedSliceTwo] = useState('')
   const [selectedDrink, setSelectedDrink] = useState('')
   const [selectedPizzaToppings, setSelectedPizzaToppings] = useState([])
   const [selectedSliceOneIngredients, setSelectedSliceOneIngredients] = useState([])
@@ -71,6 +75,10 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
   const availableComboPizzaSizes = item.options?.comboPizzaSizes || []
   const isComboBuildYourOwnPizza = isComboCustomization && selectedPizzaChoice === 'Build Your Own Pizza'
   const wingOrderUnit = Number(item.options?.wingOrderUnit || 10)
+  const sizeOptions = (item.options?.size || []).map((option) => ({
+    value: option,
+    label: `${option} - $${item.basePrice[option].toFixed(2)}`,
+  }))
 
   const buildYourOwnExtraPriceBySize = {
     Personal: 0.5,
@@ -116,7 +124,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
   const isMissingLunchSelections = (
     (item.options?.sliceOne && !selectedSliceOne)
     || (item.options?.sliceOneIngredients && selectedSliceOneIngredients.length === 0)
-    || (item.options?.sliceTwo && !selectedSliceOne)
+    || (item.options?.sliceTwo && !selectedSliceTwo)
     || (item.options?.sliceTwoIngredients && selectedSliceTwoIngredients.length === 0)
     || (item.options?.drink && !selectedDrink)
   )
@@ -157,6 +165,44 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
     </details>
   )
 
+  const createValueSelectionToggle = (setState) => (value, isChecked) => {
+    setState((prev) => {
+      if (isChecked) {
+        return prev.includes(value) ? prev : [...prev, value]
+      }
+
+      return prev.filter((entry) => entry !== value)
+    })
+  }
+
+  const createValueRemovalToggle = (setState) => (value, isChecked) => {
+    setState((prev) => {
+      if (isChecked) {
+        return prev.filter((entry) => entry !== value)
+      }
+
+      return prev.includes(value) ? prev : [...prev, value]
+    })
+  }
+
+  const createNamedObjectToggle = (setState) => (option, isChecked) => {
+    setState((prev) => {
+      if (isChecked) {
+        return prev.some((entry) => entry.name === option.name) ? prev : [...prev, option]
+      }
+
+      return prev.filter((entry) => entry.name !== option.name)
+    })
+  }
+
+  const handleSliceOneIngredientToggle = createValueSelectionToggle(setSelectedSliceOneIngredients)
+  const handleSliceTwoIngredientToggle = createValueSelectionToggle(setSelectedSliceTwoIngredients)
+  const handlePizzaToppingToggle = createValueSelectionToggle(setSelectedPizzaToppings)
+  const handleComboPizzaToppingToggle = createValueSelectionToggle(setSelectedComboPizzaToppings)
+  const handleRemovedToppingsToggle = createValueRemovalToggle(setRemovedToppings)
+  const handleRemovedIngredientsToggle = createValueRemovalToggle(setRemovedIngredients)
+  const handleSelectedExtrasToggle = createNamedObjectToggle(setSelectedExtras)
+
   return (
     <ModalShell
       ariaLabelledBy="customization-modal-title"
@@ -168,30 +214,24 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
 
         {item.options?.size && (
           renderSection('Choose Size', (
-            <select
+            <SelectControl
               value={selectedSize}
-              onChange={(e) => setSelectedSize(e.target.value)}
-            >
-              {item.options.size.map((option) => (
-                <option key={option} value={option}>
-                  {option} - ${item.basePrice[option].toFixed(2)}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedSize}
+              options={sizeOptions}
+              ariaLabel="Choose size"
+            />
           ), true)
         )}
 
         {item.options?.sliceOne && (
           renderSection('Choose First Slice', (
-            <select
+            <SelectControl
               value={selectedSliceOne}
-              onChange={(e) => setSelectedSliceOne(e.target.value)}
-            >
-              <option value="">Choose First Slice</option>
-              {item.options.sliceOne.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+              onChange={setSelectedSliceOne}
+              options={item.options.sliceOne}
+              placeholder="Choose First Slice"
+              ariaLabel="Choose first slice"
+            />
           ))
         )}
 
@@ -201,16 +241,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
             <CheckboxOptionList
               options={item.options.sliceOneIngredients}
               selectedValues={selectedSliceOneIngredients}
-              onToggle={(option, isChecked) => {
-                if (isChecked) {
-                  setSelectedSliceOneIngredients([...selectedSliceOneIngredients, option])
-                  return
-                }
-
-                setSelectedSliceOneIngredients(
-                  selectedSliceOneIngredients.filter((ingredient) => ingredient !== option)
-                )
-              }}
+              onToggle={handleSliceOneIngredientToggle}
             />,
             true,
             `First ${includedToppingsCount} toppings are included. Additional toppings are +$${extraToppingPrice.toFixed(2)} each.`
@@ -219,15 +250,13 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
 
         {item.options?.sliceTwo && (
           renderSection('Choose Second Slice', (
-            <select
-              value={selectedSliceOne}
-              onChange={(e) => setSelectedSliceOne(e.target.value)}
-            >
-              <option value="">Choose Second Slice</option>
-              {item.options.sliceTwo.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+            <SelectControl
+              value={selectedSliceTwo}
+              onChange={setSelectedSliceTwo}
+              options={item.options.sliceTwo}
+              placeholder="Choose Second Slice"
+              ariaLabel="Choose second slice"
+            />
           ))
         )}
 
@@ -237,16 +266,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
             <CheckboxOptionList
               options={item.options.sliceTwoIngredients}
               selectedValues={selectedSliceTwoIngredients}
-              onToggle={(option, isChecked) => {
-                if (isChecked) {
-                  setSelectedSliceTwoIngredients([...selectedSliceTwoIngredients, option])
-                  return
-                }
-
-                setSelectedSliceTwoIngredients(
-                  selectedSliceTwoIngredients.filter((ingredient) => ingredient !== option)
-                )
-              }}
+              onToggle={handleSliceTwoIngredientToggle}
             />,
             true,
             `First ${includedToppingsCount} toppings are included. Additional toppings are +$${extraToppingPrice.toFixed(2)} each.`
@@ -260,6 +280,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
               onChange={setSelectedDrink}
               options={item.options.drink}
               placeholder="Choose Drink"
+              ariaLabel="Choose drink"
             />
           ))
         )}
@@ -270,16 +291,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
             <CheckboxOptionList
               options={item.options.pizzaToppings}
               selectedValues={selectedPizzaToppings}
-              onToggle={(option, isChecked) => {
-                if (isChecked) {
-                  setSelectedPizzaToppings([...selectedPizzaToppings, option])
-                  return
-                }
-
-                setSelectedPizzaToppings(
-                  selectedPizzaToppings.filter((topping) => topping !== option)
-                )
-              }}
+              onToggle={handlePizzaToppingToggle}
             />,
             false,
             `First ${includedToppingsCount} toppings are included. Additional toppings are +$${extraToppingPrice.toFixed(2)} each.`
@@ -288,24 +300,21 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
 
         {item.options?.pizzaChoice && (
           renderSection('Choose Pizza', (
-            <select
+            <SelectControl
               value={selectedPizzaChoice}
-              required={Boolean(item.options?.pizzaChoice)}
-              aria-required={Boolean(item.options?.pizzaChoice)}
-              onChange={(e) => {
-                const nextPizza = e.target.value
+              onChange={(nextPizza) => {
                 setSelectedPizzaChoice(nextPizza)
 
                 if (nextPizza !== 'Build Your Own Pizza') {
                   setSelectedComboPizzaSize('')
                 }
               }}
-            >
-              <option value="">Choose Pizza</option>
-              {item.options.pizzaChoice.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+              options={item.options.pizzaChoice}
+              placeholder="Choose Pizza"
+              required={Boolean(item.options?.pizzaChoice)}
+              ariaRequired={Boolean(item.options?.pizzaChoice)}
+              ariaLabel="Choose pizza"
+            />
           ))
         )}
 
@@ -316,6 +325,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
               onChange={setSelectedComboPizzaSauce}
               options={availableComboPizzaSauces}
               placeholder="Keep default sauce"
+              ariaLabel="Choose pizza sauce"
             />
           ))
         )}
@@ -329,6 +339,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
               placeholder="Choose Size"
               required={isComboBuildYourOwnPizza}
               ariaRequired={isComboBuildYourOwnPizza}
+              ariaLabel="Choose build your own pizza size"
             />
           ), true)
         )}
@@ -338,28 +349,16 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
             <CheckboxOptionList
               options={availableComboPizzaToppings}
               selectedValues={selectedComboPizzaToppings}
-              onToggle={(option, isChecked) => {
-                if (isChecked) {
-                  setSelectedComboPizzaToppings([...selectedComboPizzaToppings, option])
-                  return
-                }
-
-                setSelectedComboPizzaToppings(
-                  selectedComboPizzaToppings.filter((topping) => topping !== option)
-                )
-              }}
+              onToggle={handleComboPizzaToppingToggle}
             />
           ))
         )}
 
         {item.options?.wingChoice && (
           renderSection('Choose Wings', (
-            <select
+            <SelectControl
               value={selectedWingChoice}
-              required={Boolean(item.options?.wingChoice)}
-              aria-required={Boolean(item.options?.wingChoice)}
-              onChange={(e) => {
-                const nextWings = e.target.value
+              onChange={(nextWings) => {
                 setSelectedWingChoice(nextWings)
 
                 if (!nextWings) {
@@ -367,12 +366,12 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
                   setSelectedComboWingDipSauce('')
                 }
               }}
-            >
-              <option value="">Choose Wings</option>
-              {item.options.wingChoice.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </select>
+              options={item.options.wingChoice}
+              placeholder="Choose Wings"
+              required={Boolean(item.options?.wingChoice)}
+              ariaRequired={Boolean(item.options?.wingChoice)}
+              ariaLabel="Choose wings"
+            />
           ))
         )}
 
@@ -385,6 +384,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
               placeholder="Choose Coating Sauce"
               required={Boolean(selectedWingChoice && availableComboWingCoatingSauces.length > 0)}
               ariaRequired={Boolean(selectedWingChoice && availableComboWingCoatingSauces.length > 0)}
+              ariaLabel="Choose wing coating sauce"
             />
           ))
         )}
@@ -398,6 +398,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
               placeholder="Choose Dipping Sauce"
               required={Boolean(selectedWingChoice && availableComboWingDipSauces.length > 0)}
               ariaRequired={Boolean(selectedWingChoice && availableComboWingDipSauces.length > 0)}
+              ariaLabel="Choose wing dipping sauce"
             />
           ))
         )}
@@ -411,19 +412,18 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
               placeholder="Choose Beverage"
               required={Boolean(item.options?.beverageChoice)}
               ariaRequired={Boolean(item.options?.beverageChoice)}
+              ariaLabel="Choose beverage"
             />
           ))
         )}
 
         {isWingCustomization && (
           renderSection('Wing Quantity', (
-            <input
-              type="number"
+            <NumberInputControl
+              value={wingOrderCount}
               min="1"
               step="1"
-              value={wingOrderCount}
-              onChange={(e) => {
-                const parsed = Number(e.target.value)
+              onChange={(parsed) => {
                 const nextCount = Number.isFinite(parsed) && parsed > 0 ? parsed : 1
                 setWingOrderCount(nextCount)
                 setSelectedWingCoatingSauces((prev) => {
@@ -524,6 +524,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
               onChange={setSelectedDressing}
               options={item.options.dressing}
               placeholder="Choose Dressing"
+              ariaLabel="Choose dressing"
             />
           ))
         )}
@@ -535,6 +536,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
               onChange={setSelectedSauceOne}
               options={item.options.sauceOne}
               placeholder="Choose First Sauce"
+              ariaLabel="Choose first sauce"
             />
           ))
         )}
@@ -546,6 +548,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
               onChange={setSelectedSauceTwo}
               options={item.options.sauceTwo}
               placeholder="Choose Second Sauce"
+              ariaLabel="Choose second sauce"
             />
           ))
         )}
@@ -557,36 +560,31 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
               onChange={setSelectedDip}
               options={item.options.dip}
               placeholder="Choose Dip"
+              ariaLabel="Choose dip"
             />
           ))
         )}
 
         {item.options?.extraDips && (
           renderSection('Extra Dips', (
-            <div className="topping-options">
-              {item.options.extraDips.map((dip) => (
-                <label key={dip.name} className="topping-option">
-                  {dip.name} (+${dip.price.toFixed(2)} each)
-                  <input
-                    type="number"
-                    min="0"
-                    value={extraDips[dip.name]?.quantity || 0}
-                    onChange={(e) => {
-                      const quantity = Number(e.target.value)
-
-                      setExtraDips({
-                        ...extraDips,
-                        [dip.name]: {
-                          name: dip.name,
-                          price: dip.price,
-                          quantity,
-                        },
-                      })
-                    }}
-                  />
-                </label>
-              ))}
-            </div>
+            <QuantityOptionList
+              options={item.options.extraDips}
+              getKey={(dip) => dip.name}
+              getLabel={(dip) => `${dip.name} (+$${dip.price.toFixed(2)} each)`}
+              getValue={(dip) => extraDips[dip.name]?.quantity || 0}
+              onChangeQuantity={(dip, quantity) => {
+                setExtraDips({
+                  ...extraDips,
+                  [dip.name]: {
+                    name: dip.name,
+                    price: dip.price,
+                    quantity,
+                  },
+                })
+              }}
+              min="0"
+              step="1"
+            />
           ))
         )}
 
@@ -596,14 +594,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
             <CheckboxOptionList
               options={item.options.removeToppings}
               selectedValues={item.options.removeToppings.filter((option) => !removedToppings.includes(option))}
-              onToggle={(option, isChecked) => {
-                if (isChecked) {
-                  setRemovedToppings(removedToppings.filter((topping) => topping !== option))
-                  return
-                }
-
-                setRemovedToppings([...removedToppings, option])
-              }}
+              onToggle={handleRemovedToppingsToggle}
             />,
             false,
             'Uncheck any toppings you want removed.'
@@ -616,16 +607,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
             <CheckboxOptionList
               options={item.options.removeIngredients}
               selectedValues={item.options.removeIngredients.filter((option) => !removedIngredients.includes(option))}
-              onToggle={(option, isChecked) => {
-                if (isChecked) {
-                  setRemovedIngredients(
-                    removedIngredients.filter((ingredient) => ingredient !== option)
-                  )
-                  return
-                }
-
-                setRemovedIngredients([...removedIngredients, option])
-              }}
+              onToggle={handleRemovedIngredientsToggle}
             />,
             false,
             'Uncheck any ingredients you want removed.'
@@ -634,26 +616,13 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
 
         {item.options?.addExtras && (
           renderSection('Add Extras', (
-            <div className="topping-options">
-              {item.options.addExtras.map((option) => (
-                <label key={option.name} className="topping-option">
-                  <input
-                    type="checkbox"
-                    checked={selectedExtras.some((extra) => extra.name === option.name)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedExtras([...selectedExtras, option])
-                      } else {
-                        setSelectedExtras(
-                          selectedExtras.filter((extra) => extra.name !== option.name)
-                        )
-                      }
-                    }}
-                  />
-                  {option.name} (+${(isBuildYourOwnPizza ? buildYourOwnExtraUnitPrice : option.price).toFixed(2)})
-                </label>
-              ))}
-            </div>
+            <CheckboxToggleList
+              options={item.options.addExtras}
+              getKey={(option) => option.name}
+              getLabel={(option) => `${option.name} (+$${(isBuildYourOwnPizza ? buildYourOwnExtraUnitPrice : option.price).toFixed(2)})`}
+              isChecked={(option) => selectedExtras.some((extra) => extra.name === option.name)}
+              onToggle={handleSelectedExtrasToggle}
+            />
           ))
         )}
 
@@ -688,6 +657,7 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
                 selectedComboWingDipSauce,
                 selectedBeverageChoice,
                 selectedSliceOne,
+                selectedSliceTwo,
                 selectedDrink,
                 selectedSliceOneIngredients,
                 selectedSliceTwoIngredients,
