@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 function ProfileModal({
   email,
@@ -10,12 +10,29 @@ function ProfileModal({
   onPhoneChange,
 }) {
   const [isEditing, setIsEditing] = useState(false)
+  const [saveMessage, setSaveMessage] = useState('')
+
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
 
   if (!isEditing) {
     return (
-      <div className="login-modal" id="customer-profile">
-        <div className="login-box">
-          <h2>Customer Profile</h2>
+      <div className="login-modal" id="customer-profile" role="presentation">
+        <div
+          className="login-box"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="profile-modal-title"
+        >
+          <h2 id="profile-modal-title">Customer Profile</h2>
 
           <div className="profile-info">
             <p><strong>Name:</strong> {name || 'Not set'}</p>
@@ -25,11 +42,13 @@ function ProfileModal({
             <p><strong>Rewards Points:</strong> 120</p>
           </div>
 
-          <button onClick={() => setIsEditing(true)}>
+          {saveMessage && <p className="login-success" role="status">{saveMessage}</p>}
+
+          <button type="button" onClick={() => setIsEditing(true)}>
             Edit Profile
           </button>
 
-          <button onClick={onClose}>
+          <button type="button" onClick={onClose}>
             Close
           </button>
         </div>
@@ -38,41 +57,54 @@ function ProfileModal({
   }
 
   return (
-    <div className="login-modal" id="customer-profile">
-      <div className="login-box">
-        <h2>Update Profile</h2>
+    <div className="login-modal" id="customer-profile" role="presentation">
+      <div
+        className="login-box"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-edit-title"
+      >
+        <h2 id="profile-edit-title">Update Profile</h2>
 
+        <label htmlFor="profile-name" className="input-label">Name</label>
         <input
+          id="profile-name"
           type="text"
-          placeholder="Name"
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
+          autoComplete="name"
+          autoFocus
         />
 
+        <label htmlFor="profile-email" className="input-label">Email</label>
         <input
+          id="profile-email"
           type="email"
-          placeholder="Email"
           value={email}
           onChange={(e) => onEmailChange(e.target.value)}
+          autoComplete="email"
         />
 
+        <label htmlFor="profile-phone" className="input-label">Phone Number</label>
         <input
+          id="profile-phone"
           type="tel"
-          placeholder="Phone Number"
           value={phone}
           onChange={(e) => onPhoneChange(e.target.value)}
+          autoComplete="tel"
         />
 
         <button
+          type="button"
           onClick={() => {
             setIsEditing(false)
-            alert('Profile updated successfully!')
+            setSaveMessage('Profile updated successfully.')
           }}
         >
           Save Changes
         </button>
 
-        <button onClick={() => setIsEditing(false)}>
+        <button type="button" onClick={() => setIsEditing(false)}>
           Cancel
         </button>
       </div>

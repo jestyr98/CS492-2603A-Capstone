@@ -450,6 +450,8 @@ function App() {
 
   return (
     <>
+      <a className="skip-link" href="#main-content">Skip to main content</a>
+
       <header className="header" id="home">
         <div className="header_content container">
           <a href="#home" className="brand" onClick={closeMenu}>
@@ -501,7 +503,7 @@ function App() {
         </div>
       </header>
 
-      <main className="main-content">
+      <main className="main-content" id="main-content" tabIndex="-1">
 
         <section className="hero container">
           <article className="hero-card">
@@ -522,16 +524,16 @@ function App() {
             </p>
           </div>
 
-          <div className="menu_quick-links" aria-label="Menu section shortcuts">
+          <nav className="menu_quick-links" aria-label="Menu section shortcuts">
             {menuSections.map((section) => (
               <a key={section.id} href={`#${section.id}`} className="menu_quick-link">
                 {section.title}
               </a>
             ))}
-          </div>
+          </nav>
 
-          {menuLoading && <p>Loading menu...</p>}
-          {!menuLoading && menuError && <p>{menuError}</p>}
+          {menuLoading && <p role="status">Loading menu...</p>}
+          {!menuLoading && menuError && <p role="alert">{menuError}</p>}
 
           {!menuLoading && !menuError && menuSections.map((section) => (
             <section key={section.id} id={section.id} className="menu-section">
@@ -545,9 +547,21 @@ function App() {
                       <p>{item.description}</p>
                       <p className="menu-card_price">{item.price}</p>
                       {hasCustomizationOptions(item) ? (
-                        <button onClick={() => setSelectedItem(item)}>Customize</button>
+                        <button
+                          type="button"
+                          aria-label={`Customize ${item.name}`}
+                          onClick={() => setSelectedItem(item)}
+                        >
+                          Customize
+                        </button>
                       ) : (
-                        <button onClick={() => addToCart(item)}>Add to Cart</button>
+                        <button
+                          type="button"
+                          aria-label={`Add ${item.name} to cart`}
+                          onClick={() => addToCart(item)}
+                        >
+                          Add to Cart
+                        </button>
                       )}
                     </div>
                   </article>
@@ -574,9 +588,9 @@ function App() {
             <p>Mon-Thu: 11:00 AM - 9:00 PM | Fri-Sat: 11:00 AM - 11:00 PM | Sun: 12:00 PM - 8:00 PM</p>
 
             <div className="social-links" aria-label="Social media links">
-              <a href="https://facebook.com" target="_blank" rel="noreferrer"><FacebookIcon /></a>
-              <a href="https://x.com" target="_blank" rel="noreferrer"><XIcon /></a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer"><InstagramIcon /></a>
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Visit our Facebook page"><FacebookIcon aria-hidden="true" /></a>
+              <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="Visit our X page"><XIcon aria-hidden="true" /></a>
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Visit our Instagram page"><InstagramIcon aria-hidden="true" /></a>
             </div>
           </article>
         </section>

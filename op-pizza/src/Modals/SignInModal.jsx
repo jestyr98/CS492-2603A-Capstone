@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 function SignInModal({
   authMode,
   firstName,
@@ -22,92 +24,135 @@ function SignInModal({
 }) {
   const isCreateMode = authMode === 'create'
 
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    if (isCreateMode) {
+      onCreateAccount()
+      return
+    }
+    onLogin()
+  }
+
   return (
-    <div className="login-modal">
-      <div className="login-box">
-        <h2>{isCreateMode ? 'Create Account' : 'Sign In'}</h2>
+    <div className="login-modal" role="presentation">
+      <div
+        className="login-box"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+      >
+        <h2 id="auth-modal-title">{isCreateMode ? 'Create Account' : 'Sign In'}</h2>
+
+        <form onSubmit={handleSubmit} className="modal-form">
 
         {isCreateMode && (
           <>
+            <label htmlFor="auth-first-name" className="input-label">First Name</label>
             <input
+              id="auth-first-name"
               type="text"
-              placeholder="First Name"
               value={firstName}
               onChange={(e) => onFirstNameChange(e.target.value)}
+              autoComplete="given-name"
             />
 
+            <label htmlFor="auth-last-name" className="input-label">Last Name</label>
             <input
+              id="auth-last-name"
               type="text"
-              placeholder="Last Name"
               value={lastName}
               onChange={(e) => onLastNameChange(e.target.value)}
+              autoComplete="family-name"
             />
 
+            <label htmlFor="auth-phone" className="input-label">Phone (optional)</label>
             <input
+              id="auth-phone"
               type="tel"
-              placeholder="Phone (optional)"
               value={phone}
               onChange={(e) => onPhoneChange(e.target.value)}
+              autoComplete="tel"
             />
           </>
         )}
 
+        <label htmlFor="auth-email" className="input-label">Email</label>
         <input
+          id="auth-email"
           type="email"
-          placeholder="Email"
           value={email}
           onChange={(e) => onEmailChange(e.target.value)}
+          autoComplete="email"
+          autoFocus={!isCreateMode}
         />
 
+        <label htmlFor="auth-password" className="input-label">Password</label>
         <input
+          id="auth-password"
           type="password"
-          placeholder="Password"
           value={password}
           onChange={(e) => onPasswordChange(e.target.value)}
+          autoComplete={isCreateMode ? 'new-password' : 'current-password'}
         />
 
         {isCreateMode && (
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => onConfirmPasswordChange(e.target.value)}
-          />
+          <>
+            <label htmlFor="auth-confirm-password" className="input-label">Confirm Password</label>
+            <input
+              id="auth-confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => onConfirmPasswordChange(e.target.value)}
+              autoComplete="new-password"
+            />
+          </>
         )}
 
-        {loginError && <p className="login-error">{loginError}</p>}
+        {loginError && <p className="login-error" role="alert">{loginError}</p>}
 
-        <button className="login-button" onClick={isCreateMode ? onCreateAccount : onLogin} disabled={authLoading}>
+        <button className="login-button" type="submit" disabled={authLoading}>
           {authLoading ? 'Please wait...' : (isCreateMode ? 'Create Account' : 'Login')}
         </button>
 
         {!isCreateMode && (
-          <a
-            href="#forgot-password"
-            className="forgot-password"
+          <button
+            type="button"
+            className="link-button"
             onClick={(e) => {
               e.preventDefault()
               onForgotPassword()
             }}
           >
             Forgot Password?
-          </a>
+          </button>
         )}
 
-        <a
-          href="#toggle-auth-mode"
-          className="forgot-password"
+        <button
+          type="button"
+          className="link-button"
           onClick={(e) => {
             e.preventDefault()
             onAuthModeChange(isCreateMode ? 'signin' : 'create')
           }}
         >
           {isCreateMode ? 'Already have an account? Sign in' : 'New here? Create an account'}
-        </a>
+        </button>
 
-        <button onClick={onClose} className="cancel-button">
+        <button type="button" onClick={onClose} className="cancel-button">
           Cancel
         </button>
+        </form>
       </div>
     </div>
   )

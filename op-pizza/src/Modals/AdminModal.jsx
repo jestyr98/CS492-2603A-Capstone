@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 function AdminModal({
   options,
   loading,
@@ -31,10 +33,27 @@ function AdminModal({
     ? ingredientItems.filter((item) => allowedIngredientIds.has(item.id))
     : []
 
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+
   return (
-    <div className="login-modal" id="admin-modal">
-      <div className="login-box" style={{ width: 'min(680px, 92vw)', maxHeight: '90vh', overflowY: 'auto' }}>
-        <h2>Admin</h2>
+    <div className="login-modal" id="admin-modal" role="presentation">
+      <div
+        className="login-box"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-modal-title"
+        style={{ width: 'min(680px, 92vw)', maxHeight: '90vh', overflowY: 'auto' }}
+      >
+        <h2 id="admin-modal-title">Admin</h2>
 
         <p>Manage menu items with ingredient inputs from the database.</p>
 
@@ -45,7 +64,9 @@ function AdminModal({
 
         <h3>Add Menu Item</h3>
 
+        <label htmlFor="admin-category" className="input-label">Category</label>
         <select
+          id="admin-category"
           value={addForm.categoryId}
           onChange={(e) => onFormChange('categoryId', e.target.value)}
           disabled={loading || addLoading}
@@ -56,26 +77,29 @@ function AdminModal({
           ))}
         </select>
 
+        <label htmlFor="admin-item-name" className="input-label">Item Name</label>
         <input
+          id="admin-item-name"
           type="text"
-          placeholder="Item Name"
           value={addForm.itemName}
           onChange={(e) => onFormChange('itemName', e.target.value)}
           disabled={loading || addLoading}
         />
 
+        <label htmlFor="admin-description" className="input-label">Description</label>
         <input
+          id="admin-description"
           type="text"
-          placeholder="Description"
           value={addForm.description}
           onChange={(e) => onFormChange('description', e.target.value)}
           disabled={loading || addLoading}
         />
 
-        <label style={{ display: 'block', marginTop: 8, marginBottom: 6 }}>
+        <label htmlFor="admin-photo" style={{ display: 'block', marginTop: 8, marginBottom: 6 }}>
           Upload Photo
         </label>
         <input
+          id="admin-photo"
           type="file"
           accept="image/*"
           onChange={(e) => onPhotoSelected(e.target.files?.[0] || null)}
@@ -83,11 +107,12 @@ function AdminModal({
         />
         <p>{selectedPhotoName || 'No photo selected.'}</p>
 
+        <label htmlFor="admin-base-price" className="input-label">Base Price</label>
         <input
+          id="admin-base-price"
           type="number"
           min="0.01"
           step="0.01"
-          placeholder="Base Price"
           value={addForm.basePrice}
           onChange={(e) => onFormChange('basePrice', e.target.value)}
           disabled={loading || addLoading}
@@ -123,7 +148,9 @@ function AdminModal({
 
         <h3>Remove Menu Item</h3>
 
+        <label htmlFor="admin-remove-item" className="input-label">Menu Item To Remove</label>
         <select
+          id="admin-remove-item"
           value={removeId}
           onChange={(e) => onRemoveSelection(e.target.value)}
           disabled={loading || addLoading || removeLoading}

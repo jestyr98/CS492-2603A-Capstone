@@ -35,6 +35,33 @@ a {
   color: var(--c-accent-dark);
 }
 
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -120px;
+  z-index: 2000;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[role='button']:focus-visible {
+  outline: 3px solid #1f6feb;
+  outline-offset: 2px;
+}
+
 .container {
   width: min(1100px, 92vw);
   margin: 0 auto;
@@ -151,6 +178,15 @@ a {
   gap: 0.9rem;
   flex-wrap: wrap;
   margin-top: 0.75rem;
+}
+
+.social-links a {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
 }
 
 .menu {
@@ -287,6 +323,18 @@ a {
   font-size: 16px;
 }
 
+.input-label {
+  color: var(--c-ink-soft);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .login-box button {
   padding: 10px;
   cursor: pointer;
@@ -297,6 +345,20 @@ a {
   color: #c62828;
   text-decoration: none;
   font-size: 14px;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  color: #c62828;
+  font-size: 14px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.link-button:hover {
+  text-decoration: underline;
 }
 
 .forgot-password:hover {
@@ -323,6 +385,12 @@ a {
 
 .login-error {
   color: var(--c-accent);
+  font-size: 14px;
+  text-align: center;
+}
+
+.login-success {
+  color: #166534;
   font-size: 14px;
   text-align: center;
 }
@@ -453,7 +521,16 @@ a {
 .customization-box {
   width: min(560px, 92vw);
   max-height: 82vh;
+  overflow: hidden;
+}
+
+.customize-content {
+  flex: 1;
+  min-height: 0;
   overflow: auto;
+  display: grid;
+  gap: 12px;
+  padding-right: 4px;
 }
 
 .customize-section {
@@ -550,25 +627,35 @@ a {
 }
 
 .customize-add-button {
-  border: 1px solid var(--c-accent);
+  border: 1px solid var(--c-good);
   border-radius: 8px;
-  background: var(--c-accent);
+  background: var(--c-good);
   color: #fff;
   font-weight: 700;
 }
 
+.customize-add-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .customize-cancel-button {
-  border: 1px solid var(--c-border);
+  border: 1px solid var(--c-accent);
   border-radius: 8px;
-  background: #fff;
-  color: var(--c-ink);
+  background: var(--c-accent);
+  color: #fff;
 }
 
 .customize-actions {
-  position: sticky;
-  bottom: 0;
   display: grid;
   gap: 8px;
-  padding-top: 8px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0), #fff 40%);
+  margin-top: 8px;
+  padding-top: 4px;
+}
+
+.customize-validation {
+  margin: 0;
+  color: var(--c-accent-dark);
+  font-size: 0.84rem;
+  text-align: center;
 }
