@@ -892,7 +892,7 @@ function App() {
             ) : (
               <iframe
                 className="contact-map"
-                title="Operation Pizzeria map and delivery radius"
+                title="Operation Pizzeria map"
                 src="https://www.openstreetmap.org/export/embed.html?bbox=-81.056%2C33.985%2C-80.961%2C34.045&layer=mapnik&marker=34.015%2C-81.008"
               />
             )}
