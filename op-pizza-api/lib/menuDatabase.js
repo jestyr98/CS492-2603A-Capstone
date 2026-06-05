@@ -597,7 +597,15 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
           options.removeIngredients = nonFlavorIngredientOptions;
         }
 
-        if (sauceOptions.length > 0) {
+        const additionalToppingOptions = categoryIngredients
+          .filter((name) => !/sauce|pesto|dip|dressing|vinaigrette/i.test(name))
+          .filter((name) => !nonFlavorIngredientOptions.includes(name));
+
+        if (additionalToppingOptions.length > 0 && String(itemName || '').toLowerCase() !== 'build your own pizza') {
+          options.addExtras = additionalToppingOptions.map((name) => ({ name, price: 1.0 }));
+        }
+
+        if (String(itemName || '').toLowerCase() === 'build your own pizza' && sauceOptions.length > 0) {
           options.sauceOne = sauceOptions;
         }
       }
