@@ -217,6 +217,11 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
   const handleRemovedToppingsToggle = createValueRemovalToggle(setRemovedToppings)
   const handleRemovedIngredientsToggle = createValueRemovalToggle(setRemovedIngredients)
   const handleSelectedExtrasToggle = createNamedObjectToggle(setSelectedExtras)
+  const includedIngredients = item.options?.removeIngredients || []
+  const derivedAdditionalIngredients = (item.options?.pizzaIngredientCatalog || [])
+    .filter((name) => !includedIngredients.includes(name))
+    .map((name) => ({ name, price: 1.0 }))
+  const extraIngredientOptions = item.options?.addExtras || derivedAdditionalIngredients
 
   return (
     <ModalShell
@@ -659,10 +664,10 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
           )
         )}
 
-        {item.options?.addExtras && (
-          renderSection('Add Extras', (
+        {extraIngredientOptions.length > 0 && (
+          renderSection('Add Ingredients', (
             <CheckboxToggleList
-              options={item.options.addExtras}
+              options={extraIngredientOptions}
               getKey={(option) => option.name}
               getLabel={(option) => `${option.name} (+$${(isBuildYourOwnPizza ? buildYourOwnExtraUnitPrice : option.price).toFixed(2)})`}
               isChecked={(option) => selectedExtras.some((extra) => extra.name === option.name)}

@@ -593,12 +593,18 @@ function createMenuDatabase({ APP_DB_PATH, APP_DB_SCHEMA_PATH, APP_DB_SEED_PATH,
       const options = {};
 
       if (sectionId === 'pizzas') {
+        const allPizzaIngredientOptions = categoryIngredients
+          .filter((name) => !/sauce|pesto|dip|dressing|vinaigrette/i.test(name));
+
+        if (allPizzaIngredientOptions.length > 0) {
+          options.pizzaIngredientCatalog = allPizzaIngredientOptions;
+        }
+
         if (nonFlavorIngredientOptions.length > 0) {
           options.removeIngredients = nonFlavorIngredientOptions;
         }
 
-        const additionalToppingOptions = categoryIngredients
-          .filter((name) => !/sauce|pesto|dip|dressing|vinaigrette/i.test(name))
+        const additionalToppingOptions = allPizzaIngredientOptions
           .filter((name) => !nonFlavorIngredientOptions.includes(name));
 
         if (additionalToppingOptions.length > 0 && String(itemName || '').toLowerCase() !== 'build your own pizza') {
