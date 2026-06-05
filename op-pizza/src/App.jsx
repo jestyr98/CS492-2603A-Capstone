@@ -236,7 +236,7 @@ function App() {
   const submitOrder = async (checkoutPayload) => {
     const paymentMethod = checkoutPayload.paymentMethod
     let paymentStatus = 'not_required'
-    let paymentId = null
+    let paymentId
 
     if (paymentMethod === 'card') {
       const card = checkoutPayload.paymentCard
@@ -302,7 +302,7 @@ function App() {
       body: JSON.stringify({
         ...checkoutPayload,
         paymentStatus,
-        paymentId,
+        ...(paymentId ? { paymentId } : {}),
       }),
     })
 

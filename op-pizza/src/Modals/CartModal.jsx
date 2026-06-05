@@ -6,6 +6,11 @@ const TAX_RATE = 0.08
 const ORDER_FEE = 1.99
 const DELIVERY_FEE = 3.99
 
+const toCurrencyNumber = (value) => {
+  const numericValue = Number(value)
+  return Number.isFinite(numericValue) ? Number(numericValue.toFixed(2)) : 0
+}
+
 function CartModal({
   cartItems,
   resolveItemImage,
@@ -49,13 +54,14 @@ function CartModal({
     }, 0)
   }, [cartItems])
 
-  const fees = ORDER_FEE + (orderType === 'delivery' ? DELIVERY_FEE : 0)
-  const taxes = Number(((subtotal + fees) * TAX_RATE).toFixed(2))
+  const fees = toCurrencyNumber(ORDER_FEE + (orderType === 'delivery' ? DELIVERY_FEE : 0))
+  const taxes = toCurrencyNumber((subtotal + fees) * TAX_RATE)
   const customTip = Number.parseFloat(customTipAmount)
   const tipAmount = orderType === 'delivery'
-    ? Number((Number.isFinite(customTip) ? customTip : (subtotal * (tipPercent / 100))).toFixed(2))
+    ? toCurrencyNumber(Number.isFinite(customTip) ? customTip : (subtotal * (tipPercent / 100)))
     : 0
-  const total = Number((subtotal + fees + taxes + tipAmount).toFixed(2))
+  const safeSubtotal = toCurrencyNumber(subtotal)
+  const total = toCurrencyNumber(safeSubtotal + fees + taxes + tipAmount)
 
   useEscapeToClose(onClose)
 
@@ -76,10 +82,6 @@ function CartModal({
     setOrderType(nextOrderType)
     setCheckoutError('')
     setCheckoutSuccess('')
-
-    if (nextOrderType === 'delivery' && paymentMethod === 'cash') {
-      setPaymentMethod('card')
-    }
 
     if (nextOrderType === 'carryout') {
       setTipPercent(0)
@@ -155,15 +157,19 @@ function CartModal({
       cartItems,
       orderType,
       deliveryAddress: isDelivery ? deliveryAddress : null,
-      billingAddress: billingSameAsDelivery
-        ? (isDelivery ? deliveryAddress : null)
-        : billingAddress,
+      billingAddress: isCardPayment
+        ? (
+          billingSameAsDelivery
+            ? (isDelivery ? deliveryAddress : null)
+            : billingAddress
+        )
+        : null,
       paymentMethod,
       tipAmount,
       pricing: {
-        subtotal: Number(subtotal.toFixed(2)),
+        subtotal: safeSubtotal,
         taxes,
-        fees: Number(fees.toFixed(2)),
+        fees,
         total,
       },
       paymentCard: isCardPayment
@@ -361,7 +367,6 @@ function CartModal({
                       type="radio"
                       name="payment-method"
                       checked={paymentMethod === 'cash'}
-                      disabled={isDelivery}
                       onChange={() => setPaymentMethod('cash')}
                     />
                     Cash
@@ -376,10 +381,6 @@ function CartModal({
                     Card
                   </label>
                 </div>
-
-                {isDelivery && (
-                  <p className="checkout-note">Delivery orders require card payment; cash is disabled.</p>
-                )}
 
                 {isCardPayment && (
                   <>

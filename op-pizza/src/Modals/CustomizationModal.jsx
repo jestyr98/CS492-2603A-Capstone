@@ -572,19 +572,19 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
           ))
         )}
 
-        {!isWingCustomization && item.options?.sauceOne && (
-          renderSection('Choose First Sauce', (
+        {isBuildYourOwnPizza && item.options?.sauceOne && (
+          renderSection('Choose Sauce', (
             <SelectControl
               value={selectedSauceOne}
               onChange={setSelectedSauceOne}
               options={item.options.sauceOne}
-              placeholder="Choose First Sauce"
-              ariaLabel="Choose first sauce"
+              placeholder="Choose Sauce"
+              ariaLabel="Choose sauce"
             />
           ))
         )}
 
-        {!isWingCustomization && item.options?.sauceTwo && (
+        {isBuildYourOwnPizza && item.options?.sauceTwo && (
           renderSection('Choose Second Sauce', (
             <SelectControl
               value={selectedSauceTwo}
@@ -646,14 +646,16 @@ function CustomizationModal({ item, onClose, onAddToCart }) {
 
         {!isWingCustomization && item.options?.removeIngredients && (
           renderSection(
-            'Customize Ingredients',
+            isBuildYourOwnPizza ? 'Selected Ingredients' : 'Included Ingredients',
             <CheckboxOptionList
               options={item.options.removeIngredients}
               selectedValues={item.options.removeIngredients.filter((option) => !removedIngredients.includes(option))}
               onToggle={handleRemovedIngredientsToggle}
             />,
             false,
-            'Uncheck any ingredients you want removed.'
+            isBuildYourOwnPizza
+              ? 'Uncheck any ingredients you do not want.'
+              : 'Ingredients that come on this pizza are pre-checked. Uncheck any ingredient to remove it.'
           )
         )}
 
